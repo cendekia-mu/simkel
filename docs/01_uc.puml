@@ -8,19 +8,14 @@ rectangle "Sistem Informasi Kelurahan/Desa" {
   (Login) as UC_Login
   (Dashboard) as UC_Dashboard
   (Permohonan) as UC_Permohonan
-  (Approval Permohonan) as UC_ApprovalPermohonan
-  (Manage User) as UC_ManageUser
+  (Approval) as UC_ApprovalPermohonan
   (Laporan) as UC_Laporan
   (Tand Tangan Elektronik) as UC_TTE
-  (Register) as UC_Register
-  (Profile) as UC_Profile
   (Referensi) as UC_Referensi
 }
-User --> UC_Register
 User --> UC_Login
 User --> UC_Dashboard
 User --> UC_Permohonan
-User --> UC_Profile
 Approval --> UC_ApprovalPermohonan
 Approval ..> User: <<extends>>
 Manager ..> User : <<extends>>

@@ -23,12 +23,12 @@ class AppClass(BaseApp):
         if not os.path.exists(self.temp_files):
             os.makedirs(self.temp_files)
 
-        config.add_static_view("lkpj/static", 'lkpj:static',
+        config.add_static_view("simkel/static", 'simkel:static',
                                cache_max_age=3600)
-        self.files = self.settings.get("lkpj_files", self.temp_files) + os.sep
+        self.files = self.settings.get("simkel_files", self.temp_files) + os.sep
         if not os.path.exists(self.files):
             os.makedirs(self.files)
-        config.add_static_view("lkpj/files", self.files,
+        config.add_static_view("simkel/files", self.files,
                                cache_max_age=0)
 
 
@@ -41,19 +41,19 @@ def get_connection(config):
     LkpjBase.metadata.bind = engine
 
 
-LKPJ_CLASS = AppClass()
+SIMKEL_CLASS = AppClass()
 
 
 def includeme(config):
     get_connection(config)
-    LKPJ_CLASS.init(config)
-    LKPJ_CLASS.static_views(config)
-    LKPJ_CLASS.route_from_csv(config, "lkpj.views",
-                              template_path="lkpj:views/templates/")
+    SIMKEL_CLASS.init(config)
+    SIMKEL_CLASS.static_views(config)
+    SIMKEL_CLASS.route_from_csv(config, "simkel.views",
+                              template_path="simkel:views/templates/")
     config.scan(".")
     print("+", __name__, "includeme class loaded")
 
 
 @subscriber(BeforeRender)
 def add_global(event):
-    event['get_lkpj_menus'] = LKPJ_CLASS.get_menus
+    event['get_lkpj_menus'] = SIMKEL_CLASS.get_menus
