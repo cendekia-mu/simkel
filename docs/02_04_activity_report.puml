@@ -1,0 +1,13 @@
+@startuml
+title Activity Diagram for Manager (Report)
+
+|Manager|
+start
+:Membuka Halaman Dashboard;
+:Memilih Permohonan;
+|System|
+:Menampilkan Data Permohonan;
+|Manager|
+:Melihat Data Permohonan;
+stop
+@enduml

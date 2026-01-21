@@ -1,0 +1,21 @@
+@startuml
+title Sequence Diagram: Permohonan Layanan
+
+actor User
+participant "SIMKEL" as System
+database "Database" as DB
+
+User -> System: Mengisi Data Permohonan
+activate System
+System -> System: Validasi Data Permohonan
+alt Data Valid
+    System -> DB: INSERT INTO permohonan (...)
+    activate DB
+    DB --> System: Konfirmasi Penyimpanan
+    deactivate DB
+    System --> User: Tampilkan Pesan Sukses
+else Data Tidak Valid
+    System --> User: Tampilkan Pesan Error Validasi
+    deactivate System
+end
+@enduml

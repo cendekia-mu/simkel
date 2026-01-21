@@ -1,0 +1,24 @@
+@startuml
+title Sequence Diagram: User Login
+
+actor User
+participant "SIMKEL" as System
+database "Database" as DB
+
+User -> System: Masukkan Username & Password
+activate System
+
+System -> DB: SELECT * FROM users WHERE username = ?
+activate DB
+DB --> System: User data
+deactivate DB
+
+alt Kredensial Valid
+    System --> User: Login Berhasil, Tampilkan Dashboard
+else Kredensial Tidak Valid
+    System --> User: Login Gagal, Tampilkan Pesan Error
+end
+
+deactivate System
+
+@enduml

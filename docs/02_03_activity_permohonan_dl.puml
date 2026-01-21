@@ -1,0 +1,27 @@
+@startuml
+title Activity Diagram for Download Permohonan
+
+|User|
+start
+:Membuka Halaman Dashboard Permohonan;
+|System|
+:Menampilkan Dashboard Permohonan;
+|User|
+:Memeriksa status permohonan;
+if (Permohonan disetujui?) then (ya)
+:Download;
+|System|
+  :Menyiapkan file download;
+  |User|
+  :Menerima file download;
+else (tidak)
+  stop
+endif
+
+
+
+|User|
+stop
+
+@enduml
+

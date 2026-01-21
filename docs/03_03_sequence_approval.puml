@@ -1,0 +1,41 @@
+@startuml
+title Sequence Diagram: Approval
+
+actor Approval
+participant "SIMKEL" as System
+database "Database" as DB
+participant "TTE" as TTE
+
+Approval -> System: Memilih Permohonan
+activate System
+System -> DB: SELECT * FROM permohonan WHERE id = ?
+activate DB
+DB --> System: Konfirmasi Select
+deactivate DB
+System --> Approval: Tampilkan Data Permohonan
+deactivate System
+alt Setuju
+    Approval -> System: Setujui Permohonan
+    activate System
+    System -> DB: UPDATE permohonan SET status = 'disetujui' WHERE id = ?
+    activate DB
+    DB --> System: Konfirmasi Update
+    deactivate DB
+    System -> System: Generate PDF untuk TTE 
+    System -> TTE: Kirim Permohonan untuk TTE
+    activate TTE
+    TTE --> System: Konfirmasi TTE Selesai
+    deactivate TTE
+    System --> Approval: Tampilkan Pesan Sukses
+    deactivate System
+else tolak
+    Approval -> System: Tolak Permohonan
+    activate System
+    System -> DB: UPDATE permohonan SET status = 'ditolak' WHERE id = ?
+    activate DB
+    DB --> System: Konfirmasi Update
+    deactivate DB
+    System --> Approval: Tampilkan Pesan Sukses
+    deactivate System
+end
+@enduml

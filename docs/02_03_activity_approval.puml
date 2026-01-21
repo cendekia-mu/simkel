@@ -1,0 +1,26 @@
+@startuml
+title Activity Diagram for Approval
+
+|Approval|
+start
+:Membuka Halaman Dashboard;
+:Memilih Permohonan;
+|System|
+:Menampilkan Data Permohonan;
+|Approval|
+:Menyetujui atau Menolak Permohonan;
+|System|
+if (Setuju?) then (tidak)
+  :Memperbarui status permohonan menjadi ditolak;
+
+else (ya)
+  :Memperbarui status permohonan menjadi disetujui;
+endif
+|System|
+:Menampilkan Dashboard;
+|Approval|
+:Melihat Dashboard;
+
+stop
+
+@enduml

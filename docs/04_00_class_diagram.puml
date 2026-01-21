@@ -1,0 +1,38 @@
+@startuml
+title Class Diagram SIMKEL
+class Standar {
+  +id: int
+  +create_uid: int
+  +update_uid: int
+  +created: datetime
+  +updated: datetime
+  +get()
+}
+class PermohonanType {
+  +nama: string
+  +level: int  
+}
+class Kelurahan {
+  +nama: string
+}
+
+class Kecamatan {
+  +nama: string
+
+}
+'level 0 Kelurahan 1 Kecamatan
+class Permohonan {
+  +kode: int
+  +nama: string
+  +type_id: integer 
+  +status: int 
+  +parent_id: int
+}
+'1 Draft 0 Terkirim 1 Disetujui 2 Ditolak'
+Standar <|-- Permohonan
+Standar <|-- PermohonanType
+Kelurahan "1" -- "0..*" Permohonan : has >
+Kecamatan "1" -- "0..*" Kelurahan : has >
+Kecamatan "1" -- "0..*" Permohonan : has >
+PermohonanType "1" -- "0..*" Permohonan : has >
+@enduml

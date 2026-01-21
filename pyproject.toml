@@ -1,0 +1,50 @@
+[build-system]
+requires = ['setuptools >= 64', 'wheel']
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools]
+packages = ["simkel", ]
+
+[tool.mypy]
+exclude = [
+    'bak',
+    'docs',
+    'tests',
+]
+show_error_codes = true
+
+[project]
+name = 'opensipkd_simkel'
+version = '1.0'
+dependencies = [
+    'opensipkd_base',
+    ]
+requires-python = '>= 3.8'
+authors = [
+    {name='Agus Gustiana', email='aa.gustiana@gmail.com'},
+    {email="opensipkd@gmail.com" },]
+
+maintainers = [
+    { name = "Ari", email = "ariagungprasetiyo@gmail.com" },
+    { name = "Owo Sugiana", email = "sugiana@gmail.com" }]
+
+description = 'Sistem Informasi Manajemen Kelurahan'
+readme = 'README.md'
+# license = {text = 'Apache Software License'}
+keywords = ["openSIPKD"]
+classifiers = [
+    'Development Status :: 5 - Beta',
+    'Programming Language :: Python :: 3',
+    'Operating System :: OS Independent',
+    'Framework :: Pylons',
+    'Topic :: Internet :: WWW/HTTP',
+    'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+]
+
+[project.optional-dependencies]
+dev = [
+    'pyramid_debugtoolbar',
+    'pytest', 'webtest']
+
+[project.scripts]
+cmuf-simkel-db-init = 'simkel.scripts.initializedb:main'

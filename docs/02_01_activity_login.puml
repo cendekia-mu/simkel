@@ -1,0 +1,30 @@
+@startuml
+title Activity Diagram for User
+
+|User|
+start
+:Membuka Halaman Login;
+
+|System|
+:Menampilkan Halaman Login;
+
+|User|
+:Input username dan password;
+
+|System|
+:Validasi kredensial;
+
+if (Kredensial valid?) then (ya)
+  |System|
+  :Menampilkan Dashboard dan Menu;
+  |User|
+  :Melihat Dashboard dan Menu;
+  stop
+else (tidak)
+  |System|
+  :Menampilkan pesan error;
+  |User|
+  :Melihat pesan error;
+  stop
+endif
+@enduml

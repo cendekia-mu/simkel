@@ -1,0 +1,38 @@
+@startuml use_case_lkpj
+left to right direction
+actor "User" as User
+actor "Approval" as Approval
+actor "Manager" as Manager
+actor "Admin" as Admin
+rectangle "Sistem Informasi Kelurahan/Desa" {
+  (Login) as UC_Login
+  (Dashboard) as UC_Dashboard
+  (Permohonan) as UC_Permohonan
+  (Approval Permohonan) as UC_ApprovalPermohonan
+  (Manage User) as UC_ManageUser
+  (Laporan) as UC_Laporan
+  (Tand Tangan Elektronik) as UC_TTE
+  (Register) as UC_Register
+  (Profile) as UC_Profile
+  (Referensi) as UC_Referensi
+}
+User --> UC_Register
+User --> UC_Login
+User --> UC_Dashboard
+User --> UC_Permohonan
+User --> UC_Profile
+Approval --> UC_ApprovalPermohonan
+Approval ..> User: <<extends>>
+Manager ..> User : <<extends>>
+Manager --> UC_Laporan
+Admin ..> User : <<extends>>
+Admin --> UC_Referensi
+UC_Referensi ..> UC_Login : <<includes>>
+UC_Dashboard ..> UC_Login: <<includes>>
+UC_Permohonan ..> UC_Login: <<includes>>
+UC_ApprovalPermohonan ..> UC_Login: <<includes>>
+UC_ApprovalPermohonan ..> UC_TTE: <<extends>>
+UC_ApprovalPermohonan ..> UC_Permohonan: <<extends>>
+UC_Laporan ..> UC_Login: <<includes>>
+
+@enduml

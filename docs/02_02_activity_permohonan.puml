@@ -1,0 +1,39 @@
+@startuml
+title Activity Diagram for User (Permohonan)
+
+|User|
+start
+:Membuka Halaman Dashboard Permohonan;
+|System|
+:Menampilkan Dashboard Permohonan;
+|User|
+:Melihat Dashboard Permohonan;
+
+  |User|
+  |System|
+  :Menampilkan Tambah Permohonan;
+  |User|
+  :Mengisi form permohonan;
+  :Submit form permohonan;
+  |System|
+  :Validasi data permohonan;
+  if (Data permohonan valid?) then (tidak)
+    |System|
+    :Menampilkan pesan error;
+    |User|
+    :Melihat pesan error;
+  else (ya)
+
+    |System|
+    :Menyimpan data permohonan;
+    :Menampilkan Dashboard;
+    |User|
+    :Melihat dashboard;
+  endif
+
+
+
+|User|
+stop
+
+@enduml
