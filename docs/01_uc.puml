@@ -1,4 +1,4 @@
-@startuml use_case_lkpj
+@startuml use_case_simkel
 left to right direction
 actor "User" as User
 actor "Approval" as Approval

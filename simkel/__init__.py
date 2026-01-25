@@ -3,7 +3,7 @@ import os
 from pyramid.events import BeforeRender, subscriber
 from opensipkd.base import BaseApp
 from sqlalchemy import engine_from_config
-from lkpj.models import LkpjBase, LkpjDBSession
+from .models import SimkelBase, SimkelDBSession
 
 log = logging.getLogger(__name__)
 
@@ -37,8 +37,8 @@ def get_connection(config):
     engine = engine_from_config(
         settings, 'sqlalchemy.', client_encoding='utf8',
         max_identifier_length=30)  # , convert_unicode=True
-    LkpjDBSession.configure(bind=engine)
-    LkpjBase.metadata.bind = engine
+    SimkelDBSession.configure(bind=engine)
+    SimkelBase.metadata.bind = engine
 
 
 SIMKEL_CLASS = AppClass()
@@ -56,4 +56,4 @@ def includeme(config):
 
 @subscriber(BeforeRender)
 def add_global(event):
-    event['get_lkpj_menus'] = SIMKEL_CLASS.get_menus
+    event['get_simkel_menus'] = SIMKEL_CLASS.get_menus

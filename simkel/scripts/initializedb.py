@@ -1,4 +1,4 @@
-from lkpj.models import LkpjDBSession
+from simkel.models import SimkelDBSession
 from opensipkd.models import Group, Permission, GroupPermission, User, UserGroup
 from opensipkd.base.scripts.initializedb import append_csv, reset_sequences, \
     alembic_run, create_schema
@@ -37,8 +37,8 @@ def main(argv=sys.argv):
     Base.metadata.bind = engine
     # Base.metadata.create_all(bind=engine)
     
-    LkpjDBSession.configure(bind=engine)
-    LkpjBase.metadata.bind = engine
+    SimkelDBSession.configure(bind=engine)
+    SimkelBase.metadata.bind = engine
 
     reset_sequences()
 
@@ -55,4 +55,4 @@ def main(argv=sys.argv):
     append_csv(UserGroup, "users_groups.csv", [
                "user_id", "group_id"], get_file_func=get_file)
     transaction.commit()
-    print('****PBB ETA CREATED****')
+    print('****SIMKEL CREATED****')

@@ -1,44 +1,63 @@
-# Aplikasi LKPJ
-Tujuan dari aplikasi LKPJ adalah untuk mengelola data lkpj dengan output berupa 
+# Aplikasi SIKEL
+Tujuan dari aplikasi SimKEL adalah untuk mengelola data permohonan masyarakat dengan output berupa 
 dokumen pdf.
 
 
-## Pemasangan
+## A. Pemasangan
 
-1. Pasang opensipkd-base terlebih dahulu::
+### Virtual Environment
+
+Buat Virtual Envirenment baru atau gunakanyang sudah ada ::
+
+### Install Production
+1. Instal opensipkd-base
 ```
-    $ git clone https://git.opensipkd.com/aa.gusti/opensipkd-base.git
-    $ ~/env/bin/pip install opensipkd-base/
+    $ pip install git+https://git.opensipkd.com/aa.gusti/opensipkd-base.git 
+    atau
+    $ pip install git+https://github.com/cendekia-mu/opensipkd-base.git 
+```    
+2. Install opensipkd-simkel 
 ```
-2. Lalu pasang lkpj.
+    $ pip install git+https://github.com/cendekia-mu/simkel.git
+```
 
-    Unduh source-nya::
+### Install Development
+1. Instal opensipkd-base
+```
+    $ git clone git+https://git.opensipkd.com/aa.gusti/opensipkd-base.git 
+    atau
+    $ git clone git+https://github.com/cendekia-mu/opensipkd-base.git 
+```    
+2. Install opensipkd-simkel 
+```
+    $ git clone git+https://github.com/cendekia-mu/simkel.git
+```
 
-        $ git clone https://git.opensipkd.com/aa.gusti/lkpj.git
+3. Install::
+```    
+    $ ./env/bin/pip install opensipkd-base/
+    $ ./env/bin/pip install simkel/
+```    
 
-    Pasang::
-
-        $ ~/env/bin/pip install lkpj/ 
-
-    Tambahkan  konfigurasi::
+### Tambahkan  konfigurasi::
     ```
     [main]
     pyramid.includes =
         ...
-        lkpj
+        simkel
 
-    [alembic_lkpj]
-    script_location = lkpj:alembic
+    [alembic_simkel]
+    script_location = simkel:alembic
     sqlalchemy.url = postgresql://user:password@server:port/db
     ```
 
-    Inisialisasi database::
+### Inisialisasi database::
 
-        $ ~/env/bin/alembic -c live.ini -n alembic_lkpj upgrade head
+        $ ~/env/bin/alembic -c live.ini -n alembic_simkel upgrade head
 
-3. Jalankan web server::
+## B. Jalankan web server::
 
     $ ~/env/bin/pserve live.ini
 
-Di web browser buka `http://server:port/lkpj <http://server:port/lkpj>`_
+Di web browser buka `http://server:port/simkel <http://server:port/simkel>`_
  
