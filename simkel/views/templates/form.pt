@@ -1,0 +1,15 @@
+<html metal:use-macro="load: ./base.pt">
+<div metal:fill-slot="content">
+  <div class="row justify-content-md-center">
+    <div class="panel panel-default" >
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-fw fa-plus"></i>&nbsp;${request.title}</h3>
+      </div>
+      <div class="panel-body">
+        <div tal:content="structure form"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</html>

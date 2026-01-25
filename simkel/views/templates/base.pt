@@ -1,0 +1,42 @@
+<html metal:use-macro="load: opensipkd.base:views/templates/base5.pt" tal:omit-tag="">
+<span metal:fill-slot="navs" tal:omit-tag="">
+  <ul style="margin-top: 0; padding-top: 0;">
+    <li tal:repeat="menu get_simkel_menus()" tal:attributes="class route_name in menu['route_name'] and 'active'">
+      <a tal:condition="python:not menu['children'] and (not menu['permission'] or has_permission(request, menu['permission']))"
+        href="${home}${menu['path']}">
+        <i tal:condition="menu['icon']" class="fa fa-lg fa-fw ${menu['icon']}"></i>
+        <span>${menu['nama']}</span>
+      </a>
+      <a tal:condition="python:menu['children'] and (not menu['permission'] or has_permission(request, menu['permission']))"
+        href="#">
+        <i tal:condition="menu['icon']" class="fa fa-lg fa-fw ${menu['icon']}"></i>
+        <span class="menu-item-parent">${menu['nama']}</span>
+      </a>
+
+      <ul
+        tal:condition="python:menu['children'] and (not menu['permission'] or has_permission(request, menu['permission']))">
+        <li tal:repeat="submenu menu['children']"
+          tal:attributes="class route_name in submenu['route_name'] and 'active'">
+          <a tal:condition="python:not submenu['children'] and (not menu['permission'] or has_permission(request, submenu['permission']))"
+            href="${home}${submenu['path']}">
+            <i tal:condition="submenu['icon']" class="fa fa-lg fa-fw ${submenu['icon']}"></i>
+            <span>${submenu['nama']}</span>
+          </a>
+
+          <a tal:condition="submenu['children']" href="#">
+            <i tal:condition="submenu['icon']" class="fa fa-lg fa-fw ${submenu['icon']}"></i>
+            <span class="menu-item-parent">${submenu['nama']}</span>
+          </a>
+
+          <ul tal:condition="submenu['children']">
+            <li tal:repeat="submenu2 submenu['children']"
+              tal:attributes="class route_name in submenu2['route_name'] and 'active'">
+              <a href="${home}${submenu2['path']}">${submenu2['nama']}</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</span>
+</html>

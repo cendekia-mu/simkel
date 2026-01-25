@@ -1,5 +1,5 @@
 kode,path,file_name,class_name,func_name,order_id,permission,parent_id/routes.kode,nama,status,type,app_id,is_menu,template,csrf
-simkel,/simkel,__init__,Views,view_list,1,,,Home,1,0,,1,home.pt,
+simkel,/simkel,__init__,Views,view_list,1,,,Home,1,0,,1,dashboard.pt,
 simkel-act,/simkel/{act}/act,__init__,Views,,,,,simkel Act,1,0,,,json,
 simkel-data,/simkel/data,simkel,Views,view_list,,,,simkel,1,0,,1,form.pt,
 simkel-data-act,/simkel/data/{act}/act,simkel,Views,,1,,,simkel Act,1,0,,0,json,
