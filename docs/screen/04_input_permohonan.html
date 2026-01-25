@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Input Permohonan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+  <div class="container py-4 px-2">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <h3 class="mb-4 text-center">Input Permohonan</h3>
+            <form>
+              <div class="mb-3">
+                <label for="jenisPermohonan" class="form-label">Jenis Permohonan</label>
+                <select class="form-select" id="jenisPermohonan" required>
+                  <option value="">Pilih Jenis Permohonan</option>
+                  <option value="domisili">Surat Keterangan Domisili</option>
+                  <option value="usaha">Surat Keterangan Usaha</option>
+                  <option value="tidak_mampu">Surat Keterangan Tidak Mampu</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="namaPemohon" class="form-label">Nama Pemohon</label>
+                <input type="text" class="form-control" id="namaPemohon" placeholder="Masukkan nama" required>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                  <label for="idcard" class="form-label">No. Identitas (KTP/SIM)</label>
+                  <input type="text" class="form-control" id="idcard" placeholder="No. Identitas">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="alamat1" class="form-label">Alamat 1</label>
+                <input type="text" class="form-control" id="alamat1" placeholder="Alamat utama">
+              </div>
+              <div class="mb-3">
+                <label for="alamat2" class="form-label">Alamat 2</label>
+                <input type="text" class="form-control" id="alamat2" placeholder="Alamat tambahan">
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="email" placeholder="Email">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="phone" class="form-label">Telepon</label>
+                  <input type="text" class="form-control" id="phone" placeholder="Telepon">
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                  <label for="mobile" class="form-label">HP</label>
+                  <input type="text" class="form-control" id="mobile" placeholder="No. HP">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="website" class="form-label">Website</label>
+                  <input type="text" class="form-control" id="website" placeholder="Website">
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                  <label for="kecamatan" class="form-label">Kecamatan</label>
+                  <select class="form-select" id="kecamatan" required>
+                    <option value="">Pilih Kecamatan</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="kelurahan" class="form-label">Kelurahan/Desa</label>
+                  <select class="form-select" id="kelurahan" required>
+                    <option value="">Pilih Kelurahan/Desa</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6 mb-6">
+                  <label for="rt" class="form-label">RT</label>
+                  <input type="text" class="form-control" id="rt" placeholder="RT">
+                </div>
+                <div class="col-md-6 mb-6">
+                  <label for="rw" class="form-label">RW</label>
+                  <input type="text" class="form-control" id="rw" placeholder="RW">
+                </div>
+              </div>
+              <div class="row g-2">
+
+                <div class="col-md-6 mb-6">
+                  <label for="tempatLahir" class="form-label">Tempat Lahir</label>
+                  <input type="text" class="form-control" id="tempatLahir" placeholder="Tempat Lahir">
+                </div>
+                <div class="col-md-6 mb-6">
+                  <label for="tglLahir" class="form-label">Tanggal Lahir</label>
+                  <input type="date" class="form-control" id="tglLahir">
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                  <label for="jenisKelamin" class="form-label">Jenis Kelamin</label>
+                  <select class="form-select" id="jenisKelamin">
+                    <option value="">Pilih</option>
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="golDarah" class="form-label">Gol. Darah</label>
+                  <select class="form-select" id="golDarah">
+                    <option value="">Pilih</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="AB">AB</option>
+                    <option value="O">O</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row g-2">
+               
+                <div class="col-md-6 mb-3">
+                  <label for="agama" class="form-label">Agama</label>
+                  <select class="form-select" id="agama" required>
+                    <option value="">Pilih</option>
+                    <option value="Islam">Islam</option>
+                    <option value="Kristen">Kristen</option>
+                    <option value="Katolik">Katolik</option>
+                    <option value="Hindu">Hindu</option>
+                    <option value="Budha">Budha</option>
+                    <option value="Kong Hu Chu">Kong Hu Chu</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="perkawinan" class="form-label">Status Kawin</label>
+                  <select class="form-select" id="perkawinan">
+                    <option value="">Pilih</option>
+                    <option value="TK">Tidak Kawin</option>
+                    <option value="K">Kawin</option>
+                    <option value="J">Janda</option>
+                    <option value="D">Duda</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                  <label for="pekerjaan" class="form-label">Pekerjaan</label>
+                  <select class="form-select" id="pekerjaan" required>
+                    <option value="">Pilih</option>
+                    <option value="Pelajar/Mahasiswa">Pelajar/Mahasiswa</option>
+                    <option value="PNS">PNS</option>
+                    <option value="Karyawan Swasta">Karyawan Swasta</option>
+                    <option value="Wiraswasta">Wiraswasta</option>
+                    <option value="Petani">Petani</option>
+                    <option value="Nelayan">Nelayan</option>
+                    <option value="Ibu Rumah Tangga">Ibu Rumah Tangga</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label d-block">Kewarganegaraan</label>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="kewarganegaraan" id="wni" value="WNI" required>
+                    <label class="form-check-label" for="wni">Indonesia (WNI)</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="kewarganegaraan" id="wna" value="WNA">
+                    <label class="form-check-label" for="wna">Asing (WNA)</label>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="tanggalPermohonan" class="form-label">Tanggal Permohonan</label>
+                <input type="date" class="form-control" id="tanggalPermohonan" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Upload Dokumen Kelengkapan</label>
+                <div id="dokumen-group">
+                  <div class="row g-2 mb-2 dokumen-item">
+                    <div class="col-5">
+                      <select class="form-select" name="jenisDokumen[]" required>
+                        <option value="">Pilih Jenis Dokumen</option>
+                        <option value="KTP">KTP</option>
+                        <option value="KK">Kartu Keluarga</option>
+                        <option value="Surat Pengantar">Surat Pengantar</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
+                    </div>
+                    <div class="col-6">
+                      <input class="form-control" type="file" name="fileDokumen[]" accept=".pdf,.jpg,.jpeg,.png" required>
+                    </div>
+                    <div class="col-1 d-flex align-items-center">
+                      <button type="button" class="btn btn-danger btn-sm btn-remove-dokumen" title="Hapus" style="display:none"><i class="bi bi-x"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="addDokumenBtn"><i class="bi bi-plus"></i> Tambah Dokumen</button>
+                <div class="form-text">Format: PDF, JPG, PNG. Maksimal 5MB per file.</div>
+              </div>
+              <div class="mb-3">
+                <label for="keteranganTambahan" class="form-label">Keterangan Tambahan</label>
+                <textarea class="form-control" id="keteranganTambahan" rows="2" placeholder="Opsional"></textarea>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Kirim Permohonan</button>
+                <a href="dashboard.html" class="btn btn-outline-secondary">Batal</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Dynamic dokumen upload
+    document.getElementById('addDokumenBtn').addEventListener('click', function() {
+      const group = document.getElementById('dokumen-group');
+      const items = group.querySelectorAll('.dokumen-item');
+      const newItem = items[0].cloneNode(true);
+      // Reset value
+      newItem.querySelector('select').selectedIndex = 0;
+      newItem.querySelector('input[type="file"]').value = '';
+      // Show remove button
+      newItem.querySelector('.btn-remove-dokumen').style.display = '';
+      group.appendChild(newItem);
+      updateRemoveButtons();
+    });
+    function updateRemoveButtons() {
+      const items = document.querySelectorAll('.dokumen-item');
+      items.forEach((item, idx) => {
+        const btn = item.querySelector('.btn-remove-dokumen');
+        btn.style.display = (items.length > 1) ? '' : 'none';
+        btn.onclick = function() {
+          if(items.length > 1) item.remove();
+          updateRemoveButtons();
+        };
+      });
+    }
+    updateRemoveButtons();
+    // Contoh data kecamatan dan kelurahan
+    const kecamatanData = {
+      'Kecamatan A': ['Kelurahan A1', 'Kelurahan A2', 'Kelurahan A3'],
+      'Kecamatan B': ['Kelurahan B1', 'Kelurahan B2'],
+      'Kecamatan C': ['Kelurahan C1', 'Kelurahan C2', 'Kelurahan C3', 'Kelurahan C4']
+    };
+    const kecamatanSelect = document.getElementById('kecamatan');
+    const kelurahanSelect = document.getElementById('kelurahan');
+    // Populate kecamatan
+    Object.keys(kecamatanData).forEach(function(kec) {
+      const opt = document.createElement('option');
+      opt.value = kec;
+      opt.textContent = kec;
+      kecamatanSelect.appendChild(opt);
+    });
+    // Update kelurahan when kecamatan changes
+    kecamatanSelect.addEventListener('change', function() {
+      kelurahanSelect.innerHTML = '<option value="">Pilih Kelurahan/Desa</option>';
+      const selected = kecamatanSelect.value;
+      if (selected && kecamatanData[selected]) {
+        kecamatanData[selected].forEach(function(kel) {
+          const opt = document.createElement('option');
+          opt.value = kel;
+          opt.textContent = kel;
+          kelurahanSelect.appendChild(opt);
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

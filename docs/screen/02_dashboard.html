@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-4 px-1 px-md-2">
+    <div class="bg-white rounded-4 shadow-sm px-3 px-md-5 py-4 mb-4 position-relative overflow-hidden">
+      <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 mb-2">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-clipboard-data text-primary" style="font-size:2rem;"></i>
+          <h2 class="mb-0 fw-bold text-primary-emphasis">Status Permohonan</h2>
+        </div>
+        <a href="04_input_permohonan.html" class="btn btn-success btn-lg d-flex align-items-center shadow-sm px-4 py-2"><i class="bi bi-plus-lg me-2"></i> Permohonan Baru</a>
+      </div>
+      <div class="row mb-2 mt-3 justify-content-end">
+        <div class="col-12 col-md-4">
+          <select class="form-select border-primary" id="statusFilter">
+            <option value="">Semua Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow border-0 bg-white rounded-4">
+      <div class="card-body p-2 p-md-4">
+        <!-- Tabel untuk layar besar -->
+        <div class="table-responsive d-none d-sm-block">
+          <table class="table table-hover align-middle mb-0 rounded-3 overflow-hidden">
+            <thead style="background: linear-gradient(90deg,#e3f0ff,#f8fafc);">
+              <tr class="align-middle">
+                <th scope="col" class="text-primary">No</th>
+                <th scope="col" class="text-primary">Nomor</th>
+                <th scope="col" class="text-primary">Jenis</th>
+                <th scope="col" class="text-primary">Tanggal</th>
+                <th scope="col" class="text-primary">Status</th>
+                <th scope="col" class="text-primary">Aksi</th>
+              </tr>
+            </thead>
+            <tbody style="background: #f8fafc;">
+              <tr data-status="Pending">
+                <td>1</td>
+                <td>PMH-2026-001</td>
+                <td>Surat Keterangan Domisili</td>
+                <td>2026-01-20</td>
+                <td><span class="badge bg-warning text-dark">Pending</span></td>
+                <td>
+                  <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> <span class="d-none d-md-inline">Detail</span></a>
+                </td>
+              </tr>
+              <tr data-status="Approved">
+                <td>2</td>
+                <td>PMH-2026-002</td>
+                <td>Surat Keterangan Usaha</td>
+                <td>2026-01-18</td>
+                <td><span class="badge bg-success">Approved</span></td>
+                <td>
+                  <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> <span class="d-none d-md-inline">Detail</span></a>
+                </td>
+              </tr>
+              <tr data-status="Rejected">
+                <td>3</td>
+                <td>PMH-2026-003</td>
+                <td>Surat Keterangan Tidak Mampu</td>
+                <td>2026-01-15</td>
+                <td><span class="badge bg-danger">Rejected</span></td>
+                <td>
+                  <a href="#" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> <span class="d-none d-md-inline">Detail</span></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Card list untuk mobile -->
+        <div class="d-block d-sm-none">
+          <div class="row g-3">
+            <div class="col-12 card-mobile" data-status="Pending">
+              <div class="card border-0 shadow-sm mb-2 rounded-4 bg-gradient" style="background: linear-gradient(120deg,#f8fafc 80%,#e3f0ff 100%);">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="flex-grow-1">
+                      <div class="fw-bold text-primary-emphasis fs-6">PMH-2026-001</div>
+                      <div class="small text-muted mb-1">Surat Keterangan Domisili</div>
+                    </div>
+                    <span class="badge bg-warning text-dark align-self-start">Pending</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small"><i class="bi bi-calendar-event me-1"></i>2026-01-20</span>
+                    <a href="#" class="btn btn-info btn-sm rounded-pill px-3"><i class="bi bi-eye"></i> Detail</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 card-mobile" data-status="Approved">
+              <div class="card border-0 shadow-sm mb-2 rounded-4 bg-gradient" style="background: linear-gradient(120deg,#f8fafc 80%,#e3f0ff 100%);">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="flex-grow-1">
+                      <div class="fw-bold text-primary-emphasis fs-6">PMH-2026-002</div>
+                      <div class="small text-muted mb-1">Surat Keterangan Usaha</div>
+                    </div>
+                    <span class="badge bg-success align-self-start">Approved</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small"><i class="bi bi-calendar-event me-1"></i>2026-01-18</span>
+                    <a href="#" class="btn btn-info btn-sm rounded-pill px-3"><i class="bi bi-eye"></i> Detail</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 card-mobile" data-status="Rejected">
+              <div class="card border-0 shadow-sm mb-2 rounded-4 bg-gradient" style="background: linear-gradient(120deg,#f8fafc 80%,#e3f0ff 100%);">
+                <div class="card-body p-3">
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="flex-grow-1">
+                      <div class="fw-bold text-primary-emphasis fs-6">PMH-2026-003</div>
+                      <div class="small text-muted mb-1">Surat Keterangan Tidak Mampu</div>
+                    </div>
+                    <span class="badge bg-danger align-self-start">Rejected</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small"><i class="bi bi-calendar-event me-1"></i>2026-01-15</span>
+                    <a href="#" class="btn btn-info btn-sm rounded-pill px-3"><i class="bi bi-eye"></i> Detail</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Filter status untuk tabel dan card
+    document.getElementById('statusFilter').addEventListener('change', function() {
+      const val = this.value;
+      // Tabel
+      document.querySelectorAll('tbody tr[data-status]').forEach(function(row) {
+        if (!val || row.getAttribute('data-status') === val) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+      // Card
+      document.querySelectorAll('.card-mobile').forEach(function(card) {
+        if (!val || card.getAttribute('data-status') === val) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  </script>
+  <style>
+    body {
+      background: linear-gradient(120deg,#e3f0ff 60%,#f8fafc 100%);
+      min-height: 100vh;
+    }
+    .card {
+      border-radius: 1.25rem !important;
+    }
+    .btn-success {
+      background: linear-gradient(90deg,#4fd1c5 0,#38b2ac 100%);
+      border: none;
+    }
+    .btn-success:hover {
+      background: linear-gradient(90deg,#38b2ac 0,#319795 100%);
+    }
+    .btn-info {
+      background: linear-gradient(90deg,#4299e1 0,#3182ce 100%);
+      border: none;
+      color: #fff;
+    }
+    .btn-info:hover {
+      background: linear-gradient(90deg,#3182ce 0,#2b6cb0 100%);
+      color: #fff;
+    }
+    .table th, .table td {
+      vertical-align: middle;
+    }
+    @media (max-width: 575.98px) {
+      .table-responsive { display: none !important; }
+      .card { border-radius: 1.5rem !important; }
+    }
+  </style>
+</body>
+</html>
