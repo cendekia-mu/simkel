@@ -12,10 +12,22 @@ rectangle "Sistem Informasi Kelurahan/Desa" {
   (Laporan) as UC_Laporan
   (Tand Tangan Elektronik) as UC_TTE
   (Referensi) as UC_Referensi
+  (Download) as UC_Download
+  (Add) as UC_Add
+  (Edit) as UC_Edit
+  (Kirim) as UC_Send
+  (View) as UC_View
+
 }
 User --> UC_Login
 User --> UC_Dashboard
 User --> UC_Permohonan
+User --> UC_Download
+UC_Permohonan ..> UC_Add : <<extends>>
+UC_Permohonan ..> UC_Edit: <<extends>>
+UC_Permohonan ..> UC_View: <<extends>>
+UC_Permohonan ..> UC_Send: <<extends>>
+
 Approval --> UC_ApprovalPermohonan
 Approval ..> User: <<extends>>
 Manager ..> User : <<extends>>
@@ -27,7 +39,11 @@ UC_Dashboard ..> UC_Login: <<includes>>
 UC_Permohonan ..> UC_Login: <<includes>>
 UC_ApprovalPermohonan ..> UC_Login: <<includes>>
 UC_ApprovalPermohonan ..> UC_TTE: <<extends>>
-UC_ApprovalPermohonan ..> UC_Permohonan: <<extends>>
+UC_ApprovalPermohonan ..> UC_Permohonan: <<includes>>
 UC_Laporan ..> UC_Login: <<includes>>
+UC_Download ..> UC_Login: <<includes>>
+UC_Download ..> UC_Permohonan: <<includes>>
+UC_Download ..> UC_TTE: <<includes>>
+UC_Download ..> UC_ApprovalPermohonan: <<includes>>
 
 @enduml

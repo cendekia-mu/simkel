@@ -1,0 +1,24 @@
+@startuml use_case_simkel
+left to right direction
+actor "User" as User
+actor "Guest" as Guest
+rectangle "Use Case Authentication" {
+  (Login) as UC_Login
+  (Registrasi) as UC_Registrasi
+  (Passcode) as UC_Passcode
+  (Profile) as UC_Profile
+  (Lupa Password) as UC_LupaPassword
+}
+Guest --> UC_Registrasi
+User --> UC_Login
+User --> UC_Profile
+User --> UC_LupaPassword
+UC_Profile ..> UC_Passcode : <<includes>>
+UC_Registrasi <.. UC_Login : <<include>>
+UC_Registrasi ..> UC_Passcode : <<includes>>
+UC_LupaPassword ..> UC_Login : <<extend>>
+UC_Profile ..> UC_Login : <<includes>>
+
+
+
+@enduml

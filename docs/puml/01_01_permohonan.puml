@@ -1,0 +1,56 @@
+@startuml use_case_simkel
+left to right direction
+actor "User" as User
+actor "System" as System
+actor "Pelayanan" as Pelayanan
+actor "Manager" as Manager
+rectangle "Use Case Permohonan & Approval" {
+  (Login) as UC_Login
+  (Permohonan) as UC_Permohonan
+  (Download) as UC_Download
+  (Add) as UC_Add
+  (Edit) as UC_Edit
+  (Kirim) as UC_Send
+  (View) as UC_View
+  (Verifikasi) as UC_Verifikasi
+  (TTE/Approval) as UC_TTE
+  (Draft/Pending) as UC_Draft
+  (Riwayat) as UC_Riwayat
+  (Status) as UC_Status
+  (Proses) as UC_Proses
+  (Selesai) as UC_Selesai
+}
+User --> UC_Login
+User --> UC_Permohonan
+Pelayanan --> UC_Login
+Pelayanan --> UC_Verifikasi
+Manager --> UC_TTE
+Manager --> UC_Login
+System --> UC_Status
+
+UC_Permohonan ..> UC_Add : <<extends>>
+UC_Permohonan ..> UC_Edit: <<extends>>
+UC_Permohonan ..> UC_View: <<extends>>
+UC_Permohonan ..> UC_Send: <<extends>>
+UC_Permohonan ..> UC_Download: <<extends>>
+UC_Permohonan ..> UC_Riwayat: <<extends>>
+
+UC_Add -->UC_Draft
+UC_Edit ..>UC_Draft: <<includes>> 
+UC_Send ..>UC_Draft: <<includes>> 
+UC_Send -->UC_Proses
+
+UC_Riwayat ..>UC_Verifikasi: <<includes>>
+UC_Permohonan ..> UC_Login: <<includes>>
+UC_Download ..> UC_Selesai: <<includes>>
+UC_Download ..> UC_TTE: <<includes>>
+UC_TTE ..> UC_Verifikasi : <<include>>
+UC_TTE ..> UC_Login: <<includes>>
+UC_TTE ..> UC_Permohonan: <<includes>>
+UC_Draft ..> UC_Status : <<includes>>
+UC_Proses ..> UC_Status : <<includes>>
+UC_Selesai ..> UC_Status : <<includes>>
+UC_TTE --> UC_Selesai
+UC_Verifikasi ..> UC_Login: <<includes>>
+UC_Verifikasi ..> UC_Permohonan: <<includes>>
+@enduml

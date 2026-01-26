@@ -1,0 +1,48 @@
+@startuml use_case_simkel
+left to right direction
+actor "User" as User
+actor "Pelayanan" as Pelayanan
+actor "Manager" as Manager
+actor "Admin" as Admin
+actor "Guest" as Guest
+rectangle "Sistem Informasi Permohonan Kelurahan/Desa" {
+  (Login) as UC_Login
+  (Dashboard Home) as UC_Dashboard
+  (Manager Dashboard) as UC_ManagerDashboard
+  (Permohonan) as UC_Permohonan
+  (Approval) as UC_ApprovalPermohonan
+  (Register) as UC_Register
+  (TTE) as UC_TTE
+  (Referensi) as UC_Referensi
+  (User Management) as UC_UserManagement
+}
+Guest --> UC_Dashboard
+Guest --> UC_Register
+User ..> Guest : <<extends>>
+User --> UC_Login
+User --> UC_Permohonan
+UC_Login ..> UC_Register: <<includes>>
+Pelayanan --> UC_ApprovalPermohonan
+Pelayanan ..> User: <<extends>>
+
+Manager ..> Pelayanan : <<extends>>
+Manager --> UC_ManagerDashboard
+Manager --> UC_TTE
+
+Admin ..> Pelayanan : <<extends>>
+Admin --> UC_Referensi
+Admin --> UC_UserManagement
+Admin --> UC_ManagerDashboard
+
+UC_UserManagement ..> UC_Login : <<includes>>
+UC_Referensi ..> UC_Login : <<includes>>
+UC_Dashboard ..> UC_Login: <<includes>>
+UC_Permohonan ..> UC_Login: <<includes>>
+UC_ManagerDashboard ..> UC_Login: <<includes>>
+
+UC_ApprovalPermohonan ..> UC_Login: <<includes>>
+UC_TTE ..> UC_Permohonan: <<iclude>>
+UC_TTE ..> UC_ApprovalPermohonan: <<iclude>>
+UC_ApprovalPermohonan ..> UC_Permohonan: <<includes>>
+
+@enduml

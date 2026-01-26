@@ -1,0 +1,36 @@
+@startuml
+title Activity Diagram for Approval & Workflow
+
+|Approval|
+start
+:Membuka Halaman Dashboard;
+:Filter Permohonan Berdasarkan Status;
+:Memilih Permohonan;
+|System|
+:Menampilkan Data Permohonan;
+|Approval|
+:Menyetujui atau Menolak Permohonan;
+|System|
+if (Setuju?) then (ya)
+  |System|
+  if (Akhir proses?) then (ya)
+    |System|
+    :Memperbarui status permohonan menjadi disetujui;    
+    :Menandatangani surat/dokumen;
+    :Notifikasi persetujuan ke pemohon;
+  else (tidak)
+    |System|
+    :Memperbarui status permohonan menjadi <b>Proses Berikutnya</b>;
+    :Megirim ke tahap approval berikutnya;
+  endif
+
+else (tidak)
+  |System|
+  :Memperbarui status permohonan menjadi ditolak;
+  :Notifikasi penolakan ke pemohon;
+endif
+|Approval|
+:Melihat Dashboard;
+stop
+
+@enduml
