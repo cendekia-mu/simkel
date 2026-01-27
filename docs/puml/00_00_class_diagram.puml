@@ -1,0 +1,57 @@
+@startuml 00_00_class_diagram_minimal
+title Class Diagram SIMKEL
+
+class PermohonanTypeModel {
+  +nama: string
+  +level: int  
+}
+class PermohonanFieldModel {
+  +nama: string
+  +level: int  
+}
+
+class PermohonanDocModel {
+  +type_id: int
+  +doc_name: string
+}
+
+class PermohonanFlowModel {
+  +type_id: int
+  +from_status: int
+  +to_status: int
+  +action_by: int
+  +action_at: datetime
+}
+
+class Permohonan {
+  +kode: int
+  +nama: string
+  +type_id: integer 
+  +status: int 
+  +additional_fields: json->PermohonanFieldModel[]
+}
+class PermohonanFilesModel {
+  +permohonan_id: int
+  +doc_type_id: int
+  +file_name: string
+}
+
+class PermohonanHistoryModel {
+  +permohonan_id: int
+  +flow_id: int
+  +action: string
+}
+class PartnerModel {
+  +nama: string
+  +base_partner:record
+}
+PermohonanTypeModel --o"1..n" Permohonan
+PermohonanTypeModel --o"1..n" PermohonanFieldModel
+PermohonanTypeModel --o"1..n" PermohonanDocModel
+Permohonan --o"1..n" PermohonanFilesModel
+PartnerModel --o"1..n" Permohonan
+PermohonanTypeModel --o"1..n" PermohonanFlowModel
+Permohonan --o"1..n" PermohonanHistoryModel
+PermohonanFlowModel  --o"1..n"  PermohonanHistoryModel
+
+@enduml

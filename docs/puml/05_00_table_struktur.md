@@ -10,6 +10,18 @@ Catatan: Lihat di opensipkd-base
 ## UserArea(base.UserArea)
 Catatan: Lihat di opensipkd-base
 
+
+## ProvinsiModel(base.ResPropinsi)
+Catatan: extend dari opensipkd-base
+## Kota(base.ResDati2)
+Catatan: inherit dari opensipkd-base
+
+## KecamatanModel(base.ResKecamatan)
+Catatan: inherit dari opensipkd-base
+
+## KelurahanModel(base.ResDesa)
+Catatan: inherit dari opensipkd-base
+
 ## Partner(base.Partner)
 Catatan: Lihat di opensipkd-base
 

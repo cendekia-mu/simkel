@@ -1,4 +1,4 @@
-@startuml
+@startuml 03_02_sequence_permohonan
 title Sequence Diagram: Permohonan Layanan
 
 actor User
@@ -9,6 +9,7 @@ User -> System: Mengisi Data Permohonan
 activate System
 System -> System: Validasi Data Permohonan
 alt Data Valid
+    System->System: Set Status Draft (0)
     System -> DB: INSERT INTO permohonan (...)
     activate DB
     DB --> System: Konfirmasi Penyimpanan
@@ -18,4 +19,42 @@ else Data Tidak Valid
     System --> User: Tampilkan Pesan Error Validasi
     deactivate System
 end
+User -> System: Kirim data permohonan
+System->System: Set Status Proses (1)
+System -> DB: UPDATE permohonan SET status = 1 WHERE id = ...
+activate DB
+DB --> System: Konfirmasi Update
+deactivate DB
+System --> User: Tampilkan Pesan Permohonan Dikirim
+deactivate System
+User -> System: Lihat Permohonan
+activate System
+System -> DB: SELECT * FROM permohonan WHERE id = ...
+activate DB
+DB --> System: Kembalikan Permohonan
+deactivate DB
+System --> User: Tampilkan Permohonan
+deactivate System
+User->System: Edit Permohonan
+activate System
+System -> DB: SELECT * FROM permohonan WHERE id = ...
+activate DB
+DB --> System: Kembalikan Permohonan
+deactivate DB
+System->System: Cek Status
+alt Status not in (0,2)
+    System ->User: Permohonan tidak bisa di ubah
+else Status in (0,2)
+    System --> User: Tampilkan Form Edit
+    deactivate System
+    User -> System: Simpan Perubahan
+    activate System
+    System -> DB: UPDATE permohonan SET ... WHERE id = ...
+    activate DB
+    DB --> System: Konfirmasi Update
+    deactivate DB
+    System --> User: Tampilkan Pesan Perubahan Disimpan
+    deactivate System
+end
+
 @enduml

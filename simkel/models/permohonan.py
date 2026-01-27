@@ -1,11 +1,11 @@
 
-from . import SimkelBase, StandarModel
+from . import SimkelBase, StandarModel, NamaModel
 from sqlalchemy import Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-class PermohonantTypeModel(StandarModel, SimkelBase):
+class PermohonantTypeModel(NamaModel, SimkelBase):
     __tablename__ = 'permohonan_type'
-    name = Column(String(255))
+    nama = Column(String(255))
     level = Column(Integer)  # e.g., 1 for high, 2 for medium, etc.
 
     def __repr__(self):

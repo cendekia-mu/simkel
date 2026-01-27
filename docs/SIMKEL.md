@@ -35,6 +35,9 @@
     - [Use Case Simkel](#use-case-simkel)
     - [Use Case Auth](#use-case-auth)
     - [Use Case Permohonan](#use-case-permohonan)
+  - [Class Diagram](#class-diagram)
+    - [Class](#class)
+    - [Full](#full)
 
 
 # Aplikasi SIMKEL
@@ -215,5 +218,13 @@ Merupakan laporan proses sejak dibuat sampai dengan ditolak/di tanda tangan
 ![UC 01 02](img/uc_01_02_permohonan.png)
 
 
+## Class Diagram
 
+### Class
+![CLS 00 00](img/00_00_class_diagram_minimal.png)
+
+### Full
+Diagram ini tidak hanya menunjukan relasi antar tabel tapi juga relasi antar class yang diturunkan di bedakan dengan tanda panah atau bukan
+
+![CLS 00 01](img/00_00_class_diagram.png)
 

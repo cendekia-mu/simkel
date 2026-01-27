@@ -23,16 +23,12 @@ start
     |User|
     :Melihat pesan error;
   else (ya)
-
     |System|
     :Menyimpan data permohonan;
     :Menampilkan Dashboard;
     |User|
     :Melihat dashboard;
   endif
-
-
-
 |User|
 stop
 

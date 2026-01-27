@@ -13,9 +13,27 @@ session_factory = sessionmaker()
 SimkelDBSession = scoped_session(session_factory)
 register(SimkelDBSession)   
 
+
+class User(models.User):
+    db_session = SimkelDBSession
+
 class StandarModel(models.StandarModel):
     db_session = SimkelDBSession
 
-class User(models.User, SimkelBase):
+class NamaModel(models.NamaModel):
     db_session = SimkelDBSession
+class ProvinsiModel(models.ResProvinsi):
+    db_session = SimkelDBSession
+class Dati2Model(models.ResDati2):
+    db_session = SimkelDBSession
+class KecamatanModel(models.ResKecamatan):
+    db_session = SimkelDBSession
+class KelurahanModel(models.ResDesa):
+    db_session = SimkelDBSession
+
+class PartnerModel(models.Partner):
+    db_session = SimkelDBSession
+
+    
+
 

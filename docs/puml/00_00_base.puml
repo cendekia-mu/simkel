@@ -1,0 +1,90 @@
+@startuml 00_00_class_diagram
+title Class Diagram SIMKEL
+
+class StandarModel {
+  +id: int
+  +create_uid: int
+  +update_uid: int
+  +created: datetime
+  +updated: datetime
+  +get()
+}
+class KodeModel  {
+  +kode: string
+} 
+
+class NamaModel {
+  +nama: string
+}
+class UraianModel {
+  +nama: string
+}
+class ProvinsiModel {
+  +nama: string
+}
+class KotaModel {
+  +get_provinsi(): record
+}
+class KecamatanModel {
+  +nama: string
+  +get_kota(): record
+}
+class KelurahanModel {
+  +nama: string
+  +get_kecamatan(): record
+}
+
+class PermohonanTypeModel {
+  +nama: string
+  +level: int  
+}
+class PermohonanFieldModel {
+  +nama: string
+  +level: int  
+}
+class Permohonan {
+  +kode: int
+  +nama: string
+  +type_id: integer 
+  +status: int 
+  +additional_fields: json->PermohonanFieldModel[]
+}
+class PermohonanFlowModel {
+  +type_id: int
+  +from_status: int
+  +to_status: int
+  +action_by: int
+  +action_at: datetime
+}
+class PermohonanHistoryModel {
+  +permohonan_id: int
+  +flow_id: int
+  +action: string
+}
+class PartnerModel {
+  +nama: string
+  +base_partner:record
+}
+StandarModel <|-- KodeModel
+StandarModel <|-- UraianModel
+KodeModel <|-- NamaModel
+UraianModel <|-- NamaModel
+NamaModel <|-- ProvinsiModel
+ProvinsiModel --o"1..n" KotaModel
+KotaModel --o"1..n" KecamatanModel
+KecamatanModel --o"1..n" KelurahanModel
+NamaModel <|-- PermohonanTypeModel 
+StandarModel <|-- Permohonan
+KelurahanModel --o"1..n" Permohonan
+KecamatanModel --o"1..n" Permohonan
+PermohonanTypeModel --o"1..n" Permohonan
+PermohonanTypeModel --o"1..n" PermohonanFieldModel
+KotaModel --o"1..n" Permohonan
+ProvinsiModel --o"1..n" Permohonan
+NamaModel <|-- PartnerModel
+PartnerModel --o"1..n" Permohonan
+PermohonanTypeModel --o"1..n" PermohonanFlowModel
+Permohonan --o"1..n" PermohonanHistoryModel
+PermohonanFlowModel  --o"1..n"  PermohonanHistoryModel
+
+@enduml
