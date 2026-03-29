@@ -42,7 +42,6 @@ class Views(BaseView):
         row_id = request.matchdict.get('id')
         item = self.get_row(row_id) if row_id else None
 
-        # Data hanya bisa diedit jika status Draft (0) atau Ditolak (2)
         if item and str(item.status) not in ['0', '2']:
             request.session.flash("Data sudah dikunci (Proses/Selesai)!", 'error')
             return HTTPFound(location=request.route_url('simkel-permohonan-field'))
@@ -65,7 +64,6 @@ class Views(BaseView):
                 item.jpel_id = appstruct['permohonan_id']
                 item.nama = appstruct['nama']
                 item.value = appstruct['value']
-                # Status '1' jika klik kirim, '0' jika klik simpan biasa
                 item.status = '1' if 'kirim' in request.POST else '0'
                 
                 self.session.add(item)
@@ -90,7 +88,6 @@ class Views(BaseView):
             request.session.flash("Data tidak ditemukan.", 'error')
             return HTTPFound(location=request.route_url('simkel-permohonan-field'))
 
-        # Syarat hapus: Status harus Draft ('0') atau Ditolak ('2')
         if str(item.status) in ['0', '2']:
             try:
                 self.session.delete(item)
