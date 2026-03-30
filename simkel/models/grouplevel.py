@@ -7,13 +7,11 @@ class SimkelGroupLevel(StandarModel, SimkelBase):
     __tablename__ = 'simkel_group_level'
     __table_args__ = {'extend_existing': True}
     db_session = SimkelDBSession
-    id = Column(
-        Integer, 
-        ForeignKey('groups.id'), 
-        primary_key=True
-    )
+    
+    id = Column(Integer, ForeignKey('groups.id'), primary_key=True)
     level_id = Column(Integer, nullable=False)
     input_level = Column(Integer, nullable=False)
+    
     group = relationship(
         Group,
         primaryjoin=lambda: SimkelGroupLevel.id == Group.id,
@@ -21,8 +19,4 @@ class SimkelGroupLevel(StandarModel, SimkelBase):
     )
 
     def __repr__(self):
-        return (
-            f"<SimkelGroupLevel(id={self.id}, "
-            f"level_id={self.level_id}, "
-            f"input_level={self.input_level})>"
-        )
+        return f"<SimkelGroupLevel(id={self.id}, level_id={self.level_id}, input_level={self.input_level})>"

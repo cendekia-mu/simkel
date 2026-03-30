@@ -6,7 +6,8 @@ from . import SimkelBase, StandarModel, SimkelDBSession
 class SimkelLogApproval(StandarModel, SimkelBase):
     __tablename__ = 'simkel_log_approval'
     __table_args__ = {'extend_existing': True}
-    DBSession = SimkelDBSession
+    db_session = SimkelDBSession 
+    
     id = Column(Integer, primary_key=True)
     create_uid = Column(Integer)
     created = Column(
@@ -20,12 +21,11 @@ class SimkelLogApproval(StandarModel, SimkelBase):
         nullable=False
     )
     status = Column(Integer)
-    permohonan = relationship('SimkelPermohonan')
+    
+    permohonan = relationship(
+        'SimkelPermohonan', 
+        backref='logs'
+    )
 
     def __repr__(self):
-        return (
-            f"<SimkelLogApproval("
-            f"id={self.id}, "
-            f"id_permohonan={self.id_permohonan}, "
-            f"status={self.status})>"
-        )
+        return f"<SimkelLogApproval(id={self.id}, id_permohonan={self.id_permohonan}, status={self.status})>"

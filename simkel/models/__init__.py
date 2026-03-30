@@ -7,6 +7,7 @@ from opensipkd.base import models
 
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
 SimkelBase = declarative_base(metadata=metadata)
+
 session_factory = sessionmaker()
 SimkelDBSession = scoped_session(session_factory)
 register(SimkelDBSession)
@@ -38,7 +39,6 @@ class KelurahanModel(models.ResDesa, SimkelBase):
 class PartnerModel(models.Partner, SimkelBase):
     db_session = SimkelDBSession
 
-
 from .jenispermohonan import SimkelJenisPermohonan
 from .permohonan import SimkelPermohonan 
 from .permohonan_field import SimkelPermohonanField
@@ -49,3 +49,23 @@ from .jenisdokumen import SimkelJenisDokumen
 from .grouplevel import SimkelGroupLevel
 from .grouplayanan import SimkelGroupLayanan
 from .alur_permohonan import SimkelAlurPermohonan
+
+__all__ = [
+    'SimkelBase',
+    'SimkelDBSession',
+    'SimkelPermohonan',
+    'SimkelJenisPermohonan',
+    'SimkelPenetapan',
+    'SimkelLogApproval',
+    'SimkelPermohonanField',
+    'PartnerModel',
+    'ProvinsiModel',
+    'Dati2Model',
+    'KecamatanModel',
+    'KelurahanModel',
+    'SimkelPartnerDocs',
+    'SimkelJenisDokumen',
+    'SimkelGroupLevel',
+    'SimkelGroupLayanan',
+    'SimkelAlurPermohonan'
+]

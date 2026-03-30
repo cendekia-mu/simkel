@@ -7,18 +7,24 @@ class SimkelAlurPermohonan(StandarModel, SimkelBase):
     __tablename__ = 'simkel_flow'
     __table_args__ = {'extend_existing': True}
     db_session = SimkelDBSession
+    
     id = Column(Integer, primary_key=True)
+    
     jenis_id = Column(
         Integer,
         ForeignKey('simkel_jpel.id'),
         nullable=False
     )
-    jenis = relationship("SimkelJenisPermohonan")
-    no_urut = Column(Integer)
+
     departemen_id = Column(
         Integer, 
         ForeignKey('departemen.id')
     )
+    
+    no_urut = Column(Integer)
+
+    jenis = relationship("SimkelJenisPermohonan", backref="flows")
+    
     departemen = relationship(
         Departemen,
         primaryjoin=lambda: SimkelAlurPermohonan.departemen_id == Departemen.id,
