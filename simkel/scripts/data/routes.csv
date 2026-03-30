@@ -1,4 +1,4 @@
-kode,path,file_name,class_name,func_name,order_id,permission,parent_id/routes.kode,nama,status,type,app_id,is_menu,template,csrf
+kode,path,file_name,class_name,func_name,order_id,permission,parent_id,nama,status,type,app_id,is_menu,template,csrf
 simkel,/simkel,__init__,Views,view_list,1,,,Home,1,0,,1,dashboard.pt,
 simkel-act,/simkel/{act}/act,__init__,Views,,,,,simkel Act,1,0,,,json,
 simkel-data,/simkel/data,simkel,Views,view_list,1,,,simkel,1,0,,1,list.pt,
@@ -17,9 +17,14 @@ simkel-permohonan-field,/simkel/permohonan/field,permohonan_field,Views,view_lis
 simkel-permohonan-field-act,/simkel/permohonan/field/{act}/act,permohonan_field,Views,,2,,,Field Act,1,0,,0,json,
 simkel-permohonan-field-add,/simkel/permohonan/field/add,permohonan_field,Views,view_form,2,,,Field Add,1,0,,0,form.pt,
 simkel-permohonan-field-edit,/simkel/permohonan/field/{id}/edit,permohonan_field,Views,view_form,2,,,Field Edit,1,0,,0,form.pt,
+simkel-permohonan-field-view,/simkel/permohonan/field/{id}/view,permohonan_field,Views,view_view,2,,,Field View,1,0,,0,form.pt,
 simkel-permohonan-field-delete,/simkel/permohonan/field/{id}/delete,permohonan_field,Views,view_delete,2,,,Field Delete,1,0,,0,form.pt,
+simkel-permohonan-field-send,/simkel/permohonan/field/{id}/send,permohonan_field,Views,view_send,2,,,Field Send,1,0,,0,json,
+simkel-permohonan-field-print,/simkel/permohonan/field/{id}/print,permohonan_field,Views,view_print,2,,,Field Print,1,0,,0,json,
 simkel-sk-act,/simkel/penetapan/{act}/act,penetapan,Views,,3,,,SK Act,1,0,,0,json,
 simkel-approval,/simkel/approval,approval,ApprovalView,view_list,4,,,Approval,1,0,,1,list.pt,
 simkel-approval-act,/simkel/approval/{act}/act,approval,ApprovalView,,4,,,Approval Act,1,0,,0,json,
+simkel-approval-view,/simkel/approval/{id}/view,approval,ApprovalView,view_view,4,,,Approval View,1,0,,0,form.pt,
 simkel-approval-approve,/simkel/approval/{id}/approve,approval,ApprovalView,view_approve,4,,,Approve,1,0,,0,form.pt,
 simkel-approval-reject,/simkel/approval/{id}/reject,approval,ApprovalView,view_reject,4,,,Reject,1,0,,0,form.pt,
+simkel-approval-print,/simkel/approval/{id}/print,approval,ApprovalView,view_print,4,,,Approval Print,1,0,,0,json,

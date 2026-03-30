@@ -1,7 +1,7 @@
 import transaction
 from datetime import datetime
 from pyramid.httpexceptions import HTTPFound
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from ..models import SimkelDBSession, SimkelPermohonanField 
 from opensipkd.base.views import BaseView
 
@@ -10,55 +10,89 @@ class ApprovalView(BaseView):
         super().__init__(request)
         self.request = request
         self.session = SimkelDBSession
+        self.title = "Verifikasi & Approval"
 
     def get_row(self, row_id):
         return self.session.query(SimkelPermohonanField).filter_by(id=row_id).first()
 
     def view_list(self):
         query = self.session.query(SimkelPermohonanField).filter(
-            SimkelPermohonanField.status.in_(['1', 1, '3', 3])
+            or_(
+                SimkelPermohonanField.status == 1,
+                SimkelPermohonanField.status == 3
+            )
         ).order_by(desc(SimkelPermohonanField.id))
-      
-        rows = query.all()
-        print(f"DEBUG: Menampilkan {len(rows)} data (Proses & Selesai)")
+        
         return dict(
-            title="DAFTAR APPROVAL & RIWAYAT",
-            rows=rows,
-            form=None 
+            title=f"Daftar {self.title}", 
+            rows=query.all()
         )
-
+    
+    def view_view(self):
+        """Menampilkan detail data untuk direview sebelum diputuskan"""
+        item = self.get_row(self.request.matchdict.get('id'))
+        if not item:
+            self.request.session.flash("Data tidak ditemukan.", 'error')
+            return HTTPFound(location=self.request.route_url('simkel-approval'))
+        
+        return dict(
+            title="Review Detail Permohonan",
+            row=item,
+            readonly=True
+        )
+    
     def view_approve(self):
         request = self.request
-        row_id = request.matchdict.get('id')
-        item = self.get_row(row_id)
+        item = self.get_row(request.matchdict.get('id'))
 
-        if item and str(item.status) == '1':
+        if item and item.status == 1:
+            item_id = item.id 
             try:
-                item.status = '3'
+                item.status = 3 
+                item.updated = datetime.now()
+                
                 self.session.add(item)
                 self.session.flush()
                 transaction.commit()
-                request.session.flash(f"Data ID {row_id} Berhasil Disetujui.")
+                
+                request.session.flash(f"ID {item_id}: Permohonan Berhasil DISETUJUI.")
             except Exception as e:
                 transaction.abort()
-                request.session.flash(f"Error: {str(e)}", 'error')
+                request.session.flash(f"Gagal Approve: {str(e)}", 'error')
         
         return HTTPFound(location=request.route_url('simkel-approval'))
 
     def view_reject(self):
         request = self.request
-        row_id = request.matchdict.get('id')
-        item = self.get_row(row_id)
+        item = self.get_row(request.matchdict.get('id'))
 
-        if item and str(item.status) == '1':
+        if item and item.status == 1:
+            item_id = item.id
             try:
-                item.status = '2' 
+                item.status = 2
+                item.updated = datetime.now()
+                
                 self.session.add(item)
                 self.session.flush()
                 transaction.commit()
-                request.session.flash(f"Data ID {row_id} Telah Ditolak.")
+                
+                request.session.flash(f"ID {item_id}: Permohonan DITOLAK & Dikembalikan ke Pemohon.")
             except Exception as e:
                 transaction.abort()
-                request.session.flash(f"Error: {str(e)}", 'error')
+                request.session.flash(f"Gagal Reject: {str(e)}", 'error')
             
         return HTTPFound(location=request.route_url('simkel-approval'))
+
+    def view_print(self):
+        request = self.request
+        item = self.get_row(request.matchdict.get('id'))
+        
+        if not item:
+            request.session.flash("Data tidak ditemukan.", 'error')
+            return HTTPFound(location=request.route_url('simkel-approval'))
+            
+        if item.status != 3:
+            request.session.flash("Cetak hanya tersedia untuk permohonan yang sudah disetujui.", 'warning')
+            return HTTPFound(location=request.route_url('simkel-approval'))
+
+        return dict(title="Cetak Arsip Approval", row=item)

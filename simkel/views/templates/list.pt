@@ -1,108 +1,124 @@
 <div metal:use-macro="load: simkel:views/templates/base.pt">
     <div metal:fill-slot="content">
-        <tal:block tal:define="items python:list(rows) if rows else []; 
-                               curr_route request.matched_route.name">
+        <tal:block tal:define="curr_route request.matched_route.name;
+                               is_approval python:'approval' in curr_route;
+                               items python:list(rows) if rows else []">
             
-            <div class="row">
-                <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
-                    <h1 class="page-title txt-color-blueDark">
-                        <i class="fa fa-fw fa-table"></i> ${title}
-                        <small tal:condition="items"> (Total: ${len(items)})</small>
-                    </h1>
+            <div class="well" style="background-color: #fff; border: 1px solid #e3e3e3; padding: 20px;">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="pull-left">
+                            <button class="btn btn-warning btn-sm"><i class="fa fa-filter"></i> Filters</button>
+                            <a tal:condition="not:is_approval"
+                               tal:attributes="href python:request.route_url(curr_route + '-add')"
+                               class="btn btn-success btn-sm" style="margin-left: 5px;">
+                                <i class="fa fa-plus"></i> Add
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 15px;">
+                    <div class="col-sm-6">
+                        <label class="form-inline">
+                            Show <select class="form-control input-sm" style="width: 70px;"><option>25</option></select> entries
+                        </label>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <label class="form-inline">Search: <input type="search" class="form-control input-sm" style="width: 200px; margin-left: 10px;"></label>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="margin-top: 15px;">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr style="background-color: #f9f9f9;">
+                                <th class="text-center" style="width: 150px;">Action</th>
+                                <th class="text-center" style="width: 60px;">No</th>
+                                <th>Nama / Deskripsi</th>
+                                <th class="text-center">Nilai / Info</th>
+                                <th class="text-center" style="width: 120px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr tal:repeat="item items">
+                                <td class="text-center" style="vertical-align: middle;">
+                                    <tal:block tal:define="item_id python:getattr(item, 'id', 0);
+                                                           st python:int(getattr(item, 'status', 0))">
+                                        
+                                        <div class="btn-group">
+                                            <a tal:attributes="href python:request.route_url(curr_route + '-view', id=item_id)"
+                                               class="btn-link" style="margin-right: 10px;" title="View Detail">
+                                                <i class="fa fa-eye text-primary" style="font-size: 16px;"></i>
+                                            </a>
+
+                                            <a tal:condition="python:st == 3"
+                                               tal:attributes="href python:request.route_url(curr_route + '-print', id=item_id)"
+                                               class="btn-link" style="margin-right: 10px;" title="Print">
+                                                <i class="fa fa-print text-success" style="font-size: 16px;"></i>
+                                            </a>
+
+                                            <tal:block tal:condition="is_approval">
+                                                <span tal:condition="python:st == 1">
+                                                    <a tal:attributes="href python:request.route_url('simkel-approval-approve', id=item_id)"
+                                                       onclick="return confirm('Setujui data ini?')" class="btn-link" style="margin-right: 10px;" title="Approve">
+                                                        <i class="fa fa-check-circle text-success" style="font-size: 16px;"></i>
+                                                    </a>
+                                                    <a tal:attributes="href python:request.route_url('simkel-approval-reject', id=item_id)"
+                                                       onclick="return confirm('Tolak data ini?')" class="btn-link" title="Reject">
+                                                        <i class="fa fa-times-circle text-danger" style="font-size: 16px;"></i>
+                                                    </a>
+                                                </span>
+                                                <i tal:condition="python:st in [2, 3]" class="fa fa-lock text-muted" title="Data Locked"></i>
+                                            </tal:block>
+
+                                            <tal:block tal:condition="not:is_approval">
+                                                <span tal:condition="python:st in [0, 2]">
+                                                    <a tal:attributes="href python:request.route_url(curr_route + '-edit', id=item_id)"
+                                                       class="btn-link" style="margin-right: 10px;" title="Edit">
+                                                        <i class="fa fa-pencil text-info" style="font-size: 16px;"></i>
+                                                    </a>
+                                                    <a tal:attributes="href python:request.route_url(curr_route + '-delete', id=item_id)"
+                                                       onclick="return confirm('Hapus data ini?')" class="btn-link" style="margin-right: 10px;" title="Delete">
+                                                        <i class="fa fa-trash text-danger" style="font-size: 16px;"></i>
+                                                    </a>
+                                                    <a tal:attributes="href python:request.route_url(curr_route + '-send', id=item_id)"
+                                                       onclick="return confirm('Kirim permohonan ke Approval?')" class="btn-link" title="Send to Approval">
+                                                        <i class="fa fa-paper-plane text-warning" style="font-size: 16px;"></i>
+                                                    </a>
+                                                </span>
+                                                <i tal:condition="python:st in [1]" class="fa fa-check-circle text-muted" title="Sedang diproses"></i>
+                                            </tal:block>
+                                        </div>
+                                    </tal:block>
+                                </td>
+
+                                <td class="text-center" style="vertical-align: middle;" tal:content="python:repeat.item.index + 1">1</td>
+
+                                <td style="vertical-align: middle;">
+                                    <strong tal:content="python:getattr(item, 'nama', getattr(item, 'nomor', '-'))">Nama</strong>
+                                    <small class="text-muted" style="display:block; font-size: 10px;">ID: ${item.id}</small>
+                                </td>
+
+                                <td class="text-center" style="vertical-align: middle;" tal:content="python:getattr(item, 'value', '-')">Nilai</td>
+
+                                <td class="text-center" style="vertical-align: middle;">
+                                    <tal:block tal:define="st python:int(getattr(item, 'status', 0))">
+                                        <span tal:condition="python:st == 3" class="label label-success">SELESAI</span>
+                                        <span tal:condition="python:st == 1" class="label label-warning">PROSES</span>
+                                        <span tal:condition="python:st == 2" class="label label-danger">REVISI</span>
+                                        <span tal:condition="python:st == 0" class="label label-default">DRAFT</span>
+                                    </tal:block>
+                                </td>
+                            </tr>
+
+                            <tr tal:condition="not items">
+                                <td colspan="5" class="text-center" style="padding: 20px;">Tidak ada data permohonan.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            <section id="widget-grid">
-                <div class="row">
-                    <article class="col-md-12">
-                        <div class="jarviswidget jarviswidget-color-darken" id="wid-id-0" data-widget-editbutton="false">
-                            <header>
-                                <span class="widget-icon"> <i class="fa fa-list"></i> </span>
-                                <h2>Daftar Data</h2>
-                            </header>
-
-                            <div>
-                                <div class="widget-body no-padding">
-                                    
-                                    <div class="dt-toolbar">
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div class="btn-group">
-                                                <a tal:condition="curr_route != 'simkel-approval'"
-                                                   tal:attributes="href request.route_url(curr_route + '-add')" 
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="fa fa-plus"></i> Tambah
-                                                </a>
-
-                                                <a tal:attributes="href request.route_url(curr_route)" 
-                                                   class="btn btn-default btn-sm">
-                                                    <i class="fa fa-refresh"></i> Refresh
-                                                </a>
-
-                                                <button class="btn btn-default btn-sm" onclick="window.print()">
-                                                    <i class="fa fa-print"></i> Cetak
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-striped table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width: 30px;" class="text-center">No</th>
-                                                    <th style="width: 150px;">Nomor</th>
-                                                    <th>Nama Pemohon</th>
-                                                    <th class="text-center" style="width: 120px;">Tgl. Mohon</th>
-                                                    <th class="text-center" style="width: 100px;">Aksi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr tal:repeat="item items">
-                                                    <td class="text-center">${repeat.item.index + 1}</td>
-                                                    <td class="text-center">${python:getattr(item, 'nomor', '-')}</td>
-                                                    <td>
-                                                        <strong tal:define="nama python:getattr(item, 'pemohon_nama', getattr(item, 'nama_pemohon', 'N/A'))">
-                                                            ${nama}
-                                                        </strong>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        ${python:getattr(item, 'tgl_permohonan', getattr(item, 'tanggal', '-'))}
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <div class="btn-group">
-                                                            <tal:block tal:define="suffix python:'-approve' if curr_route == 'simkel-approval' else '-edit'">
-                                                                <a tal:attributes="href request.route_url(curr_route + suffix, id=item.id)" 
-                                                                   class="btn btn-xs btn-default">
-                                                                    <i class="fa fa-pencil text-primary"></i>
-                                                                </a>
-                                                            </tal:block>
-
-                                                            <a tal:condition="curr_route != 'simkel-approval'"
-                                                               tal:attributes="href request.route_url(curr_route + '-delete', id=item.id)" 
-                                                               class="btn btn-xs btn-default"
-                                                               onclick="return confirm('Hapus data ini?')">
-                                                                <i class="fa fa-trash text-danger"></i>
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-
-                                                <tr tal:condition="not items">
-                                                    <td colspan="5" class="text-center" style="padding: 40px;">
-                                                        <i class="fa fa-info-circle fa-2x text-muted"></i><br/>
-                                                        <span class="text-muted">Data tidak ditemukan atau tabel database belum ada.</span>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-            </section>
         </tal:block>
     </div>
 </div>

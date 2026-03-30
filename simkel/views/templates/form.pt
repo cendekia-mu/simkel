@@ -1,53 +1,88 @@
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    <i class="fa fa-fw fa-edit"></i>&nbsp;${title}
-                </h3>
-            </div>
-
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div tal:replace="structure form">
-                            Form Deform tidak terdeteksi.
-                        </div>
-                    </div>
-                </div>
+<div metal:use-macro="load: simkel:views/templates/base.pt">
+    <div metal:fill-slot="content">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <h1 class="page-title txt-color-blueDark">
+                    <i class="fa-fw fa fa-edit"></i> 
+                    Simkel <span>> ${title}</span>
+                </h1>
             </div>
         </div>
+
+        <section id="widget-grid">
+            <div class="row">
+                <article class="col-sm-12 col-md-12 col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <i class="fa fa-fw fa-plus"></i>&nbsp;${title}
+                            </h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-horizontal">
+                                <tal:block tal:content="structure form"/>
+                            </div>
+                        </div>
+                    </div>
+                    <p>
+                        <a tal:attributes="href python:request.route_url('simkel-permohonan-field')" 
+                           class="btn btn-default btn-sm">
+                            <i class="fa fa-arrow-left"></i> Kembali
+                        </a>
+                    </p>
+                </article>
+            </div>
+        </section>
     </div>
 </div>
 
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Inisialisasi callback Deform (Penting buat JQuery Mask)
-        if (typeof deform !== 'undefined') {
-            deform.load();
-        }
-
-        // Custom styling untuk merapikan tombol bawaan deform 
-        // agar mirip dengan style SmartAdmin
-        $(".deform-form-buttons button#deforminquiry").addClass("btn btn-info");
-        $(".deform-form-buttons button#deformclose").addClass("btn btn-danger");
-        
-        // Memastikan label form punya lebar yang pas (col-sm-3 dsb)
-        $(".control-label").addClass("col-sm-3 col-md-2");
-    });
-</script>
-
 <style>
-    /* Tambahan CSS supaya form lebih rapi sesuai SS Abang */
-    .panel-default > .panel-heading {
-        background-color: #f5f5f5;
-        font-weight: bold;
-    }
-    .deform-form-fieldset {
-        border: none;
-        padding: 0;
-    }
-    .form-group {
+    .deform .form-group {
+        margin-left: 0px !important;
+        margin-right: 0px !important;
         margin-bottom: 15px;
+    }
+    .deform .control-label {
+        font-weight: bold;
+        text-align: left;
+        padding-top: 7px;
+    }
+    .deform .form-control {
+        width: 100% !important;
+        border-radius: 0px !important;
+        box-shadow: none !important;
+    }
+    .deform button[name="simpan"] {
+        background-color: #3276b1 !important;
+        border-color: #2c699d !important;
+        color: white !important;
+        padding: 6px 12px;
+        border-radius: 2px;
+    }
+    .deform button[name="kirim"] {
+        background-color: #ff9100 !important;
+        border-color: #e68200 !important;
+        color: white !important;
+        padding: 6px 12px;
+        border-radius: 2px;
+        margin-left: 5px;
+    }
+    .deform button[name="batal"] {
+        background-color: #d9534f !important;
+        border-color: #d43f3a !important;
+        color: white !important;
+        padding: 6px 12px;
+        border-radius: 2px;
+        margin-left: 5px;
+    }
+    .deform .item-error {
+        color: #a90329;
+        font-size: 11px;
+        margin-top: 5px;
+        display: block;
+    }
+    /* Memperbaiki padding kolom deform agar penuh */
+    .deform .col-sm-9, .deform .col-md-10, .deform .col-lg-10 {
+        padding-left: 0px;
     }
 </style>
