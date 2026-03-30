@@ -2,7 +2,7 @@ import transaction
 from datetime import datetime
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy import desc
-from ..models import SimkelDBSession, PermohonanFieldsModel
+from ..models import SimkelDBSession, SimkelPermohonanField 
 from opensipkd.base.views import BaseView
 
 class ApprovalView(BaseView):
@@ -12,20 +12,19 @@ class ApprovalView(BaseView):
         self.session = SimkelDBSession
 
     def get_row(self, row_id):
-        return self.session.query(PermohonanFieldsModel).filter_by(id=row_id).first()
+        return self.session.query(SimkelPermohonanField).filter_by(id=row_id).first()
 
     def view_list(self):
-        query = self.session.query(PermohonanFieldsModel).filter(
-            PermohonanFieldsModel.status.in_(['1', 1, '3', 3])
-        ).order_by(desc(PermohonanFieldsModel.id))
-        
+        query = self.session.query(SimkelPermohonanField).filter(
+            SimkelPermohonanField.status.in_(['1', 1, '3', 3])
+        ).order_by(desc(SimkelPermohonanField.id))
+      
         rows = query.all()
-        
         print(f"DEBUG: Menampilkan {len(rows)} data (Proses & Selesai)")
-        
         return dict(
             title="DAFTAR APPROVAL & RIWAYAT",
-            rows=rows
+            rows=rows,
+            form=None 
         )
 
     def view_approve(self):
@@ -35,7 +34,7 @@ class ApprovalView(BaseView):
 
         if item and str(item.status) == '1':
             try:
-                item.status = '3' 
+                item.status = '3'
                 self.session.add(item)
                 self.session.flush()
                 transaction.commit()
@@ -53,7 +52,7 @@ class ApprovalView(BaseView):
 
         if item and str(item.status) == '1':
             try:
-                item.status = '2'
+                item.status = '2' 
                 self.session.add(item)
                 self.session.flush()
                 transaction.commit()

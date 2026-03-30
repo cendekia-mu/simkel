@@ -4,7 +4,7 @@ from datetime import datetime
 from deform import widget, Form, ValidationFailure
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy import desc
-from ..models import SimkelDBSession, PermohonanModel, PermohonanFieldsModel
+from ..models import SimkelDBSession, SimkelPermohonan, SimkelPermohonanField
 from opensipkd.base.views import BaseView 
 
 class FieldSchema(colander.Schema):
@@ -27,28 +27,28 @@ class Views(BaseView):
         self.title = "Permohonan Field"
 
     def get_row(self, row_id):
-        return self.session.query(PermohonanFieldsModel).filter_by(id=row_id).first()
+        return self.session.query(SimkelPermohonanField).filter_by(id=row_id).first()
 
     def view_list(self):
-        query = self.session.query(PermohonanFieldsModel).filter(
-            PermohonanFieldsModel.status.in_(['0', '2'])
-        ).order_by(desc(PermohonanFieldsModel.id))
-        
+        query = self.session.query(SimkelPermohonanField).order_by(desc(SimkelPermohonanField.id))
         rows = query.all()
-        return dict(title="Daftar Permohonan Field", rows=rows)
+        return dict(
+            title="Daftar Permohonan Field", 
+            rows=rows, 
+            form=None
+        )
 
     def view_form(self):
         request = self.request
         row_id = request.matchdict.get('id')
         item = self.get_row(row_id) if row_id else None
-
-        if item and str(item.status) not in ['0', '2']:
-            request.session.flash("Data sudah dikunci (Proses/Selesai)!", 'error')
-            return HTTPFound(location=request.route_url('simkel-permohonan-field'))
-
-        p_query = self.session.query(PermohonanModel).all()
-        choices = [('', '-- Pilih Permohonan --')] + [(p.id, f"{p.nomor or p.id}") for p in p_query]
         
+        if item and hasattr(item, 'status') and str(item.status) not in ['0', '2']:
+            request.session.flash("Data sudah dikunci!", 'error')
+            return HTTPFound(location=request.route_url('simkel-permohonan-field'))
+        
+        p_query = self.session.query(SimkelPermohonan).all()
+        choices = [('', '-- Pilih Permohonan --')] + [(p.id, f"{p.nomor or p.id}") for p in p_query]
         schema = FieldSchema().bind()
         schema['permohonan_id'].widget.values = choices
         form = Form(schema, buttons=('simpan', 'kirim', 'batal'))
@@ -57,14 +57,14 @@ class Views(BaseView):
             if 'batal' in request.POST:
                 return HTTPFound(location=request.route_url('simkel-permohonan-field'))
             try:
-                appstruct = form.validate(request.POST.items())
-                if not item: 
-                    item = PermohonanFieldsModel()
+                controls = request.POST.items()
+                appstruct = form.validate(controls)
                 
-                item.jpel_id = appstruct['permohonan_id']
+                if not item: 
+                    item = SimkelPermohonanField()
+                item.permohonan_id = appstruct['permohonan_id']
                 item.nama = appstruct['nama']
                 item.value = appstruct['value']
-                item.status = '1' if 'kirim' in request.POST else '0'
                 
                 self.session.add(item)
                 self.session.flush()
@@ -74,12 +74,19 @@ class Views(BaseView):
                 return HTTPFound(location=request.route_url('simkel-permohonan-field'))
             except ValidationFailure as e:
                 return dict(title=f"Form {self.title}", form=e.render())
+
+        appstruct = {}
+        if item:
+            appstruct = {
+                'permohonan_id': getattr(item, 'permohonan_id', None),
+                'nama': item.nama,
+                'value': item.value
+            }
         
-        appstruct = {'permohonan_id': item.jpel_id, 'nama': item.nama, 'value': item.value} if item else {}
         return dict(title=f"Form {self.title}", form=form.render(appstruct))
 
+
     def view_delete(self):
-        """ Fungsi untuk menghapus data """
         request = self.request
         row_id = request.matchdict.get('id')
         item = self.get_row(row_id)
@@ -88,7 +95,7 @@ class Views(BaseView):
             request.session.flash("Data tidak ditemukan.", 'error')
             return HTTPFound(location=request.route_url('simkel-permohonan-field'))
 
-        if str(item.status) in ['0', '2']:
+        if hasattr(item, 'status') and str(item.status) in ['0', '2']:
             try:
                 self.session.delete(item)
                 self.session.flush()
@@ -106,10 +113,18 @@ class Views(BaseView):
         request = self.request
         row_id = request.matchdict.get('id')
         item = self.get_row(row_id)
-        if item and str(item.status) == '1':
-            item.status = '0'
-            self.session.add(item)
-            self.session.flush()
-            transaction.commit()
-            request.session.flash("Data dikembalikan ke Draft.")
+        
+        if item and hasattr(item, 'status') and str(item.status) == '1':
+            try:
+                item.status = '0'
+                self.session.add(item)
+                self.session.flush()
+                transaction.commit()
+                request.session.flash("Data berhasil dibuka kembali (menjadi Draft).")
+            except Exception as e:
+                transaction.abort()
+                request.session.flash(f"Gagal membuka kunci: {str(e)}", 'error')
+        else:
+            request.session.flash("Data tidak dalam status terkunci.", 'warning')
+            
         return HTTPFound(location=request.route_url('simkel-permohonan-field'))

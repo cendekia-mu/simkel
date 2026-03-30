@@ -1,46 +1,26 @@
-from . import SimkelBase, StandarModel
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
+from opensipkd.base.models import Partner 
+from . import SimkelBase, StandarModel, SimkelDBSession
 
-
-class PartnerDocsModel(StandarModel, SimkelBase):
+class SimkelPartnerDocs(StandarModel, SimkelBase):
     __tablename__ = 'partner_docs'
-
+    __table_args__ = {'extend_existing': True}
+    db_session = SimkelDBSession
     id = Column(Integer, primary_key=True)
-
-    # FK ke Penduduk (partner)
-    partner_id = Column(
-        Integer,
-        ForeignKey('penduduk.id'),
-        nullable=False
+    partner_id = Column(Integer, ForeignKey('penduduk.id'), nullable=False)
+    partner = relationship(
+        Partner,
+        primaryjoin=lambda: SimkelPartnerDocs.partner_id == Partner.id,
+        foreign_keys=lambda: [SimkelPartnerDocs.partner_id]
     )
-
-    partner = relationship("PendudukModel")
-
-    # FK ke Jenis Dokumen
-    jdoc_id = Column(
-        Integer,
-        ForeignKey('jenis_dokumen.id'),
-        nullable=False
-    )
-
-    jenis_dokumen = relationship("JenisDokumenModel")
-
-    # nama dokumen
-    doc_name = Column(String(128))
-
-    # status dokumen (default: 0)
-    status = Column(
-        Integer,
-        nullable=False,
-        default=0
-    )
+    file_nm = Column(String(255))
+    keterangan = Column(String(255))
+    create_uid = Column(Integer)
+    update_uid = Column(Integer)
+    created = Column(DateTime, default=datetime.now)
+    updated = Column(DateTime, onupdate=datetime.now)
 
     def __repr__(self):
-        return (
-            f"<PartnerDocsModel("
-            f"partner_id={self.partner_id}, "
-            f"jdoc_id={self.jdoc_id}, "
-            f"status={self.status}"
-            f")>"
-        )
+        return f"<SimkelPartnerDocs(id={self.id}, partner_id={self.partner_id})>"

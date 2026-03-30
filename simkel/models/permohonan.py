@@ -1,26 +1,33 @@
-
-from . import SimkelBase, StandarModel, NamaModel
-from sqlalchemy import Column, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, JSON, Text
 from sqlalchemy.orm import relationship
+from datetime import datetime
+from opensipkd.base.models import Partner 
+from . import SimkelBase, StandarModel, SimkelDBSession
 
-class PermohonantTypeModel(NamaModel, SimkelBase):
-    __tablename__ = 'permohonan_type'
-    nama = Column(String(255))
-    level = Column(Integer)  # e.g., 1 for high, 2 for medium, etc.
-
-    def __repr__(self):
-        return f"<PermohonantTypeModel(name={self.name}, description={self.description})>"
-
-
-class PermohonanModel(StandarModel, SimkelBase):
-    __tablename__ = 'permohonan'
+class SimkelPermohonan(StandarModel, SimkelBase):
+    __tablename__ = 'simkel_permohonan'
+    __table_args__ = {'extend_existing': True}
+    db_session = SimkelDBSession
     id = Column(Integer, primary_key=True)
+    partner_id = Column(Integer, ForeignKey('penduduk.id'), nullable=False)
+    partner = relationship(
+        Partner, 
+        primaryjoin=lambda: SimkelPermohonan.partner_id == Partner.id,
+        foreign_keys=lambda: [SimkelPermohonan.partner_id]
+    )
+    jenis_id = Column(Integer, ForeignKey('simkel_jpel.id'), nullable=False)
+    jenis = relationship("SimkelJenisPermohonan")
+    tgl_permohonan = Column(DateTime, nullable=False, default=datetime.now)
+    status = Column(Integer, nullable=False, default=0)
+    additional = Column(JSON)
+    reason = Column(String(128))
+    create_uid = Column(Integer)
+    update_uid = Column(Integer)
+    created = Column(DateTime, default=datetime.now)
+    updated = Column(DateTime, onupdate=datetime.now)
     nomor = Column(String(50))
-    jenis_id = Column(Integer, ForeignKey('permohonan_type.id'))
-    jenis = relationship("PermohonantTypeModel")
     pemohon_nama = Column(String(255))
     pemohon_alamat = Column(Text)
-    status = Column(String(50))  # e.g., 'pending', 'approved', 'rejected'
 
     def __repr__(self):
-        return f"<PermohonanModel(nomor={self.nomor}, pemohon_nama={self.pemohon_nama}, status={self.status})>"
+        return f"<SimkelPermohonan(id={self.id}, status={self.status})>"

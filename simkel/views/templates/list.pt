@@ -1,0 +1,108 @@
+<div metal:use-macro="load: simkel:views/templates/base.pt">
+    <div metal:fill-slot="content">
+        <tal:block tal:define="items python:list(rows) if rows else []; 
+                               curr_route request.matched_route.name">
+            
+            <div class="row">
+                <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
+                    <h1 class="page-title txt-color-blueDark">
+                        <i class="fa fa-fw fa-table"></i> ${title}
+                        <small tal:condition="items"> (Total: ${len(items)})</small>
+                    </h1>
+                </div>
+            </div>
+
+            <section id="widget-grid">
+                <div class="row">
+                    <article class="col-md-12">
+                        <div class="jarviswidget jarviswidget-color-darken" id="wid-id-0" data-widget-editbutton="false">
+                            <header>
+                                <span class="widget-icon"> <i class="fa fa-list"></i> </span>
+                                <h2>Daftar Data</h2>
+                            </header>
+
+                            <div>
+                                <div class="widget-body no-padding">
+                                    
+                                    <div class="dt-toolbar">
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div class="btn-group">
+                                                <a tal:condition="curr_route != 'simkel-approval'"
+                                                   tal:attributes="href request.route_url(curr_route + '-add')" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fa fa-plus"></i> Tambah
+                                                </a>
+
+                                                <a tal:attributes="href request.route_url(curr_route)" 
+                                                   class="btn btn-default btn-sm">
+                                                    <i class="fa fa-refresh"></i> Refresh
+                                                </a>
+
+                                                <button class="btn btn-default btn-sm" onclick="window.print()">
+                                                    <i class="fa fa-print"></i> Cetak
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 30px;" class="text-center">No</th>
+                                                    <th style="width: 150px;">Nomor</th>
+                                                    <th>Nama Pemohon</th>
+                                                    <th class="text-center" style="width: 120px;">Tgl. Mohon</th>
+                                                    <th class="text-center" style="width: 100px;">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr tal:repeat="item items">
+                                                    <td class="text-center">${repeat.item.index + 1}</td>
+                                                    <td class="text-center">${python:getattr(item, 'nomor', '-')}</td>
+                                                    <td>
+                                                        <strong tal:define="nama python:getattr(item, 'pemohon_nama', getattr(item, 'nama_pemohon', 'N/A'))">
+                                                            ${nama}
+                                                        </strong>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        ${python:getattr(item, 'tgl_permohonan', getattr(item, 'tanggal', '-'))}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="btn-group">
+                                                            <tal:block tal:define="suffix python:'-approve' if curr_route == 'simkel-approval' else '-edit'">
+                                                                <a tal:attributes="href request.route_url(curr_route + suffix, id=item.id)" 
+                                                                   class="btn btn-xs btn-default">
+                                                                    <i class="fa fa-pencil text-primary"></i>
+                                                                </a>
+                                                            </tal:block>
+
+                                                            <a tal:condition="curr_route != 'simkel-approval'"
+                                                               tal:attributes="href request.route_url(curr_route + '-delete', id=item.id)" 
+                                                               class="btn btn-xs btn-default"
+                                                               onclick="return confirm('Hapus data ini?')">
+                                                                <i class="fa fa-trash text-danger"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr tal:condition="not items">
+                                                    <td colspan="5" class="text-center" style="padding: 40px;">
+                                                        <i class="fa fa-info-circle fa-2x text-muted"></i><br/>
+                                                        <span class="text-muted">Data tidak ditemukan atau tabel database belum ada.</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </tal:block>
+    </div>
+</div>
