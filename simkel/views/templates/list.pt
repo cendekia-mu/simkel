@@ -107,7 +107,9 @@
                                 <td class="text-center" style="vertical-align: middle;" tal:content="python:repeat.item.index + 1"></td>
                                 <td style="vertical-align: middle;">
                                     <strong tal:content="python:getattr(item, 'nama', getattr(item, 'description', '-'))"></strong>
-                                    <small class="text-muted" style="display:block; font-size: 10px;">ID: ${getattr(item, 'id', '0')}</small>
+                                    <small class="text-muted" style="display:block; font-size: 10px;">
+                                        ID: ${getattr(item, 'id', '0')}
+                                    </small>
                                 </td>
                                 <td class="text-center" style="vertical-align: middle;" 
                                     tal:content="python:getattr(item, 'kode', getattr(item, 'value', '-'))"></td>

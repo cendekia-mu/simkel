@@ -1,8 +1,8 @@
 import transaction
-from datetime import datetime
+from datetime import datetime, time
 from pyramid.httpexceptions import HTTPFound
-from sqlalchemy import desc, or_
-from ..models import SimkelDBSession, SimkelPermohonanField 
+from sqlalchemy import desc, asc, or_, cast, Date
+from ..models import SimkelDBSession, SimkelPermohonanField, SimkelLogApproval
 from opensipkd.base.views import BaseView
 
 class ApprovalView(BaseView):
@@ -16,16 +16,42 @@ class ApprovalView(BaseView):
         return self.session.query(SimkelPermohonanField).filter_by(id=row_id).first()
 
     def view_list(self):
-        query = self.session.query(SimkelPermohonanField).filter(
-            or_(
-                SimkelPermohonanField.status == 1,
-                SimkelPermohonanField.status == 3
+        params = self.request.params
+        search = params.get('search')
+        status_filter = params.get('status')
+        sort_option = params.get('sort')
+        limit = int(params.get('limit', 25))
+        
+        query = self.session.query(SimkelPermohonanField)
+
+        if status_filter and status_filter.strip() != "":
+            query = query.filter(SimkelPermohonanField.status == int(status_filter))
+        else:
+            query = query.filter(SimkelPermohonanField.status.in_([1, 3]))
+
+        if search:
+            query = query.filter(
+                or_(
+                    SimkelPermohonanField.nama.ilike(f'%{search}%'),
+                    SimkelPermohonanField.kode.ilike(f'%{search}%')
+                )
             )
-        ).order_by(desc(SimkelPermohonanField.id))
+
+        if sort_option == 'id_asc':
+            query = query.order_by(asc(SimkelPermohonanField.created))
+        elif sort_option == 'nama_asc':
+            query = query.order_by(asc(SimkelPermohonanField.nama))
+        elif sort_option == 'nama_desc':
+            query = query.order_by(desc(SimkelPermohonanField.nama))
+        else:
+            query = query.order_by(desc(SimkelPermohonanField.created))
+
+        rows = query.limit(limit).all()
         
         return dict(
             title=f"Daftar {self.title}", 
-            rows=query.all()
+            rows=rows,
+            params=params
         )
     
     def view_view(self):
@@ -46,16 +72,21 @@ class ApprovalView(BaseView):
         item = self.get_row(request.matchdict.get('id'))
 
         if item and item.status == 1:
-            item_id = item.id 
             try:
                 item.status = 3 
                 item.updated = datetime.now()
-                
                 self.session.add(item)
+
+                log = SimkelLogApproval()
+                log.id_permohonan = item.id
+                log.status = 3
+                log.create_uid = request.user.id if hasattr(request, 'user') and request.user else None
+                self.session.add(log)
+                
                 self.session.flush()
                 transaction.commit()
                 
-                request.session.flash(f"ID {item_id}: Permohonan Berhasil DISETUJUI.")
+                request.session.flash(f"ID {item.id}: Permohonan Berhasil DISETUJUI.")
             except Exception as e:
                 transaction.abort()
                 request.session.flash(f"Gagal Approve: {str(e)}", 'error')
@@ -67,16 +98,21 @@ class ApprovalView(BaseView):
         item = self.get_row(request.matchdict.get('id'))
 
         if item and item.status == 1:
-            item_id = item.id
             try:
                 item.status = 2
                 item.updated = datetime.now()
-                
                 self.session.add(item)
+
+                log = SimkelLogApproval()
+                log.id_permohonan = item.id
+                log.status = 2
+                log.create_uid = request.user.id if hasattr(request, 'user') and request.user else None
+                self.session.add(log)
+                
                 self.session.flush()
                 transaction.commit()
                 
-                request.session.flash(f"ID {item_id}: Permohonan DITOLAK & Dikembalikan ke Pemohon.")
+                request.session.flash(f"ID {item.id}: Permohonan DITOLAK.")
             except Exception as e:
                 transaction.abort()
                 request.session.flash(f"Gagal Reject: {str(e)}", 'error')
@@ -91,8 +127,8 @@ class ApprovalView(BaseView):
             request.session.flash("Data tidak ditemukan.", 'error')
             return HTTPFound(location=request.route_url('simkel-approval'))
             
-        if item.status != 3:
-            request.session.flash("Cetak hanya tersedia untuk permohonan yang sudah disetujui.", 'warning')
+        if item.status not in [1, 3]:
+            request.session.flash("Cetak hanya tersedia untuk permohonan aktif.", 'warning')
             return HTTPFound(location=request.route_url('simkel-approval'))
 
         return dict(title="Cetak Arsip Approval", row=item)
