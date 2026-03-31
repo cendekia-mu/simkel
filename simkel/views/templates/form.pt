@@ -8,81 +8,95 @@
                 </h1>
             </div>
         </div>
-
         <section id="widget-grid">
             <div class="row">
                 <article class="col-sm-12 col-md-12 col-lg-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h3 class="panel-title">
-                                <i class="fa fa-fw fa-plus"></i>&nbsp;${title}
+                                <i class="fa fa-fw fa-pencil-square-o"></i>&nbsp;${title}
                             </h3>
                         </div>
                         <div class="panel-body">
-                            <div class="form-horizontal">
+                            <div class="form-horizontal" tal:condition="form">
                                 <tal:block tal:content="structure form"/>
+                            </div>
+                            <div class="form-horizontal" tal:condition="python: row and not form">
+                                <div class="form-group" tal:condition="python: hasattr(row, 'id')">
+                                    <label class="col-md-3 control-label">ID Sistem</label>
+                                    <div class="col-md-9">
+                                        <p class="form-control-static"><strong>#${row.id}</strong></p>
+                                    </div>
+                                </div>
+                                <div class="form-group" tal:condition="python: hasattr(row, 'kode')">
+                                    <label class="col-md-3 control-label">Kode Field</label>
+                                    <div class="col-md-9">
+                                        <p class="form-control-static" tal:content="row.kode or '-'"></p>
+                                    </div>
+                                </div>
+                                <div class="form-group" tal:condition="python: hasattr(row, 'nama')">
+                                    <label class="col-md-3 control-label">Nama / Label</label>
+                                    <div class="col-md-9">
+                                        <p class="form-control-static" tal:content="row.nama or '-'"></p>
+                                    </div>
+                                </div>
+                                <div class="form-group" tal:condition="python: hasattr(row, 'value')">
+                                    <label class="col-md-3 control-label">Nilai (Value)</label>
+                                    <div class="col-md-9">
+                                        <p class="form-control-static" tal:content="row.value or '-'"></p>
+                                    </div>
+                                </div>
+                                <div class="form-group" tal:condition="python: hasattr(row, 'status')">
+                                    <label class="col-md-3 control-label">Status Data</label>
+                                    <div class="col-md-9">
+                                        <span tal:condition="python: row.status == 0" class="label label-default">Draft</span>
+                                        <span tal:condition="python: row.status == 1" class="label label-warning">Menunggu Verifikasi</span>
+                                        <span tal:condition="python: row.status == 2" class="label label-danger">Ditolak</span>
+                                        <span tal:condition="python: row.status == 3" class="label label-success">Disetujui</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-footer">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <a href="javascript:history.back()" class="btn btn-default">
+                                        <i class="fa fa-arrow-left"></i> Kembali
+                                    </a>
+                                    <tal:block tal:condition="python: row and hasattr(row, 'status')">
+                                        <tal:block tal:condition="python: not form and row.status == 1">
+                                            <a tal:attributes="href python:request.current_route_url().replace('/view', '/approve')" 
+                                               class="btn btn-success"
+                                               onclick="return confirm('Apakah Anda yakin menyetujui data ini?')">
+                                                <i class="fa fa-check"></i> Setujui
+                                            </a>
+                                            <a tal:attributes="href python:request.current_route_url().replace('/view', '/reject')" 
+                                               class="btn btn-danger"
+                                               onclick="return confirm('Apakah Anda yakin menolak data ini?')">
+                                                <i class="fa fa-times"></i> Tolak
+                                            </a>
+                                        </tal:block>
+                                        <a tal:condition="python: row.status == 3"
+                                           tal:attributes="href python:request.current_route_url().replace('/view', '/print')" 
+                                           target="_blank"
+                                           class="btn btn-primary">
+                                            <i class="fa fa-print"></i> Cetak Bukti
+                                        </a>
+                                    </tal:block>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <p>
-                        <a tal:attributes="href python:request.route_url('simkel-permohonan-field')" 
-                           class="btn btn-default btn-sm">
-                            <i class="fa fa-arrow-left"></i> Kembali
-                        </a>
-                    </p>
                 </article>
             </div>
         </section>
     </div>
 </div>
-
 <style>
-    .deform .form-group {
-        margin-left: 0px !important;
-        margin-right: 0px !important;
-        margin-bottom: 15px;
-    }
-    .deform .control-label {
-        font-weight: bold;
-        text-align: left;
-        padding-top: 7px;
-    }
-    .deform .form-control {
-        width: 100% !important;
-        border-radius: 0px !important;
-        box-shadow: none !important;
-    }
-    .deform button[name="simpan"] {
-        background-color: #3276b1 !important;
-        border-color: #2c699d !important;
-        color: white !important;
-        padding: 6px 12px;
-        border-radius: 2px;
-    }
-    .deform button[name="kirim"] {
-        background-color: #ff9100 !important;
-        border-color: #e68200 !important;
-        color: white !important;
-        padding: 6px 12px;
-        border-radius: 2px;
-        margin-left: 5px;
-    }
-    .deform button[name="batal"] {
-        background-color: #d9534f !important;
-        border-color: #d43f3a !important;
-        color: white !important;
-        padding: 6px 12px;
-        border-radius: 2px;
-        margin-left: 5px;
-    }
-    .deform .item-error {
-        color: #a90329;
-        font-size: 11px;
-        margin-top: 5px;
-        display: block;
-    }
-    /* Memperbaiki padding kolom deform agar penuh */
-    .deform .col-sm-9, .deform .col-md-10, .deform .col-lg-10 {
-        padding-left: 0px;
-    }
+    .panel-body { padding: 25px; }
+    .control-label { font-weight: bold; text-align: left !important; color: #333; }
+    .form-control-static { border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; margin-bottom: 5px; display: block; }
+    .panel-footer .btn { margin-right: 8px; min-width: 110px; }
+    .label { padding: .3em .6em; font-size: 80%; }
+    .deform fieldset { border: none !important; padding: 0 !important; }
 </style>

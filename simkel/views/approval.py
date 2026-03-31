@@ -29,7 +29,6 @@ class ApprovalView(BaseView):
         )
     
     def view_view(self):
-        """Menampilkan detail data untuk direview sebelum diputuskan"""
         item = self.get_row(self.request.matchdict.get('id'))
         if not item:
             self.request.session.flash("Data tidak ditemukan.", 'error')
@@ -38,6 +37,7 @@ class ApprovalView(BaseView):
         return dict(
             title="Review Detail Permohonan",
             row=item,
+            form='', 
             readonly=True
         )
     
