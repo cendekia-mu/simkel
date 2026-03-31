@@ -8,6 +8,7 @@
                 </h1>
             </div>
         </div>
+
         <section id="widget-grid">
             <div class="row">
                 <article class="col-sm-12 col-md-12 col-lg-12">
@@ -17,10 +18,12 @@
                                 <i class="fa fa-fw fa-pencil-square-o"></i>&nbsp;${title}
                             </h3>
                         </div>
+                        
                         <div class="panel-body">
                             <div class="form-horizontal" tal:condition="form">
                                 <tal:block tal:content="structure form"/>
                             </div>
+
                             <div class="form-horizontal" tal:condition="python: row and not form">
                                 <div class="form-group" tal:condition="python: hasattr(row, 'id')">
                                     <label class="col-md-3 control-label">ID Sistem</label>
@@ -52,36 +55,50 @@
                                         <span tal:condition="python: row.status == 0" class="label label-default">Draft</span>
                                         <span tal:condition="python: row.status == 1" class="label label-warning">Menunggu Verifikasi</span>
                                         <span tal:condition="python: row.status == 2" class="label label-danger">Ditolak</span>
-                                        <span tal:condition="python: row.status == 3" class="label label-success">Disetujui</span>
+                                        <span tal:condition="python: row.status == 3" class="label label-info">Telah Disetujui (Siap Tetap)</span>
+                                        <span tal:condition="python: row.status == 4" class="label label-success">Selesai / Ditetapkan</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         <div class="panel-footer">
                             <div class="row">
                                 <div class="col-md-12">
                                     <a href="javascript:history.back()" class="btn btn-default">
                                         <i class="fa fa-arrow-left"></i> Kembali
                                     </a>
+                                    
                                     <tal:block tal:condition="python: row and hasattr(row, 'status')">
+                                        
                                         <tal:block tal:condition="python: not form and row.status == 1">
                                             <a tal:attributes="href python:request.current_route_url().replace('/view', '/approve')" 
                                                class="btn btn-success"
-                                               onclick="return confirm('Apakah Anda yakin menyetujui data ini?')">
+                                               onclick="return confirm('Setujui permohonan ini?')">
                                                 <i class="fa fa-check"></i> Setujui
                                             </a>
                                             <a tal:attributes="href python:request.current_route_url().replace('/view', '/reject')" 
                                                class="btn btn-danger"
-                                               onclick="return confirm('Apakah Anda yakin menolak data ini?')">
+                                               onclick="return confirm('Tolak permohonan ini?')">
                                                 <i class="fa fa-times"></i> Tolak
                                             </a>
                                         </tal:block>
-                                        <a tal:condition="python: row.status == 3"
+
+                                        <tal:block tal:condition="python: not form and row.status == 3">
+                                            <a tal:attributes="href python:request.current_route_url().replace('/view', '/tetapkan')" 
+                                               class="btn btn-primary"
+                                               onclick="return confirm('Tetapkan data ini dan generate TTE?')">
+                                                <i class="fa fa-gavel"></i> Tetapkan (TTE)
+                                            </a>
+                                        </tal:block>
+
+                                        <a tal:condition="python: row.status == 4"
                                            tal:attributes="href python:request.current_route_url().replace('/view', '/print')" 
                                            target="_blank"
-                                           class="btn btn-primary">
-                                            <i class="fa fa-print"></i> Cetak Bukti
+                                           class="btn btn-success">
+                                            <i class="fa fa-print"></i> Cetak SK Final
                                         </a>
+
                                     </tal:block>
                                 </div>
                             </div>
@@ -92,11 +109,12 @@
         </section>
     </div>
 </div>
+
 <style>
     .panel-body { padding: 25px; }
     .control-label { font-weight: bold; text-align: left !important; color: #333; }
     .form-control-static { border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; margin-bottom: 5px; display: block; }
     .panel-footer .btn { margin-right: 8px; min-width: 110px; }
-    .label { padding: .3em .6em; font-size: 80%; }
+    .label { padding: .3em .6em; font-size: 85%; }
     .deform fieldset { border: none !important; padding: 0 !important; }
 </style>
