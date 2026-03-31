@@ -5,39 +5,82 @@
                                items python:list(rows) if rows else []">
             
             <div class="well" style="background-color: #fff; border: 1px solid #e3e3e3; padding: 20px;">
-                <div class="row">
-                    <div class="col-xs-12">
-                        <div class="pull-left">
-                            <button class="btn btn-warning btn-sm"><i class="fa fa-filter"></i> Filters</button>
-                            <a tal:condition="not:is_approval"
-                               tal:attributes="href python:request.route_url(curr_route + '-add')"
-                               class="btn btn-success btn-sm" style="margin-left: 5px;">
-                                <i class="fa fa-plus"></i> Add
-                            </a>
+                <form method="GET" action="">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="pull-left">
+                                <button class="btn btn-warning btn-sm" type="button" data-toggle="collapse" data-target="#collapseFilter">
+                                    <i class="fa fa-filter"></i> Sort & Options
+                                </button>
+                                <a tal:condition="not:is_approval"
+                                   tal:attributes="href python:request.route_url(curr_route + '-add')"
+                                   class="btn btn-success btn-sm" style="margin-left: 5px;">
+                                    <i class="fa fa-plus"></i> Add
+                                </a>
+                            </div>
+
+                            <div class="pull-right">
+                                <div class="form-inline">
+                                    <label>Search: </label>
+                                    <input type="search" name="search" 
+                                           tal:attributes="value request.params.get('search', '')"
+                                           class="form-control input-sm" 
+                                           style="width: 200px; margin-left: 10px;"
+                                           placeholder="Kata kunci...">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="row" style="margin-top: 15px;">
-                    <div class="col-sm-6">
-                        <label class="form-inline">
-                            Show <select class="form-control input-sm" style="width: 70px;"><option>25</option></select> entries
-                        </label>
+                    <div class="collapse" id="collapseFilter" style="margin-top: 15px;">
+                        <div class="panel panel-default">
+                            <div class="panel-body" style="background-color: #fcfcfc;">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label>Urutkan</label>
+                                        <select name="sort" class="form-control input-sm" onchange="this.form.submit()">
+                                            <option value="id_desc" tal:attributes="selected python:request.params.get('sort') == 'id_desc'">Terbaru</option>
+                                            <option value="id_asc" tal:attributes="selected python:request.params.get('sort') == 'id_asc'">Terlama</option>
+                                            <option value="nama_asc" tal:attributes="selected python:request.params.get('sort') == 'nama_asc'">Nama (A-Z)</option>
+                                            <option value="nama_desc" tal:attributes="selected python:request.params.get('sort') == 'nama_desc'">Nama (Z-A)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Status</label>
+                                        <select name="status" class="form-control input-sm" onchange="this.form.submit()">
+                                            <option value="">-- Semua Status --</option>
+                                            <option value="0" tal:attributes="selected python:request.params.get('status') == '0'">Draft</option>
+                                            <option value="1" tal:attributes="selected python:request.params.get('status') == '1'">Proses</option>
+                                            <option value="2" tal:attributes="selected python:request.params.get('status') == '2'">Revisi</option>
+                                            <option value="3" tal:attributes="selected python:request.params.get('status') == '3'">Selesai</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Baris</label>
+                                        <select name="limit" class="form-control input-sm" onchange="this.form.submit()">
+                                            <option value="25" tal:attributes="selected python:request.params.get('limit') == '25'">25</option>
+                                            <option value="50" tal:attributes="selected python:request.params.get('limit') == '50'">50</option>
+                                            <option value="100" tal:attributes="selected python:request.params.get('limit') == '100'">100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm-6 text-right">
-                        <label class="form-inline">Search: <input type="search" class="form-control input-sm" style="width: 200px; margin-left: 10px;"></label>
-                    </div>
-                </div>
+                </form>
 
                 <div class="table-responsive" style="margin-top: 15px;">
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr style="background-color: #f9f9f9;">
-                                <th class="text-center" style="width: 150px;">Action</th>
-                                <th class="text-center" style="width: 60px;">No</th>
+                                <th class="text-center" style="width: 120px;">Action</th>
+                                <th class="text-center" style="width: 50px;">No</th>
                                 <th>Nama / Deskripsi</th>
-                                <th class="text-center">Nilai / Info</th>
-                                <th class="text-center" style="width: 120px;">Status</th>
+                                <th class="text-center">Kode / Info</th>
+                                <th class="text-center" style="width: 100px;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -45,63 +88,29 @@
                                 <td class="text-center" style="vertical-align: middle;">
                                     <tal:block tal:define="item_id python:getattr(item, 'id', 0);
                                                            st python:int(getattr(item, 'status', 0))">
-                                        
                                         <div class="btn-group">
                                             <a tal:attributes="href python:request.route_url(curr_route + '-view', id=item_id)"
-                                               class="btn-link" style="margin-right: 10px;" title="View Detail">
-                                                <i class="fa fa-eye text-primary" style="font-size: 16px;"></i>
-                                            </a>
-
-                                            <a tal:condition="python:st == 3"
-                                               tal:attributes="href python:request.route_url(curr_route + '-print', id=item_id)"
-                                               class="btn-link" style="margin-right: 10px;" title="Print">
-                                                <i class="fa fa-print text-success" style="font-size: 16px;"></i>
-                                            </a>
-
-                                            <tal:block tal:condition="is_approval">
-                                                <span tal:condition="python:st == 1">
-                                                    <a tal:attributes="href python:request.route_url('simkel-approval-approve', id=item_id)"
-                                                       onclick="return confirm('Setujui data ini?')" class="btn-link" style="margin-right: 10px;" title="Approve">
-                                                        <i class="fa fa-check-circle text-success" style="font-size: 16px;"></i>
-                                                    </a>
-                                                    <a tal:attributes="href python:request.route_url('simkel-approval-reject', id=item_id)"
-                                                       onclick="return confirm('Tolak data ini?')" class="btn-link" title="Reject">
-                                                        <i class="fa fa-times-circle text-danger" style="font-size: 16px;"></i>
-                                                    </a>
-                                                </span>
-                                                <i tal:condition="python:st in [2, 3]" class="fa fa-lock text-muted" title="Data Locked"></i>
-                                            </tal:block>
-
+                                               title="View"><i class="fa fa-eye text-primary"></i></a>
+                                            
                                             <tal:block tal:condition="not:is_approval">
-                                                <span tal:condition="python:st in [0, 2]">
+                                                <span tal:condition="python:st in [0, 2]" style="margin-left: 10px;">
                                                     <a tal:attributes="href python:request.route_url(curr_route + '-edit', id=item_id)"
-                                                       class="btn-link" style="margin-right: 10px;" title="Edit">
-                                                        <i class="fa fa-pencil text-info" style="font-size: 16px;"></i>
-                                                    </a>
+                                                       title="Edit"><i class="fa fa-pencil text-info"></i></a>
                                                     <a tal:attributes="href python:request.route_url(curr_route + '-delete', id=item_id)"
-                                                       onclick="return confirm('Hapus data ini?')" class="btn-link" style="margin-right: 10px;" title="Delete">
-                                                        <i class="fa fa-trash text-danger" style="font-size: 16px;"></i>
-                                                    </a>
-                                                    <a tal:attributes="href python:request.route_url(curr_route + '-send', id=item_id)"
-                                                       onclick="return confirm('Kirim permohonan ke Approval?')" class="btn-link" title="Send to Approval">
-                                                        <i class="fa fa-paper-plane text-warning" style="font-size: 16px;"></i>
-                                                    </a>
+                                                       onclick="return confirm('Hapus?')" style="margin-left: 10px;"
+                                                       title="Delete"><i class="fa fa-trash text-danger"></i></a>
                                                 </span>
-                                                <i tal:condition="python:st in [1]" class="fa fa-check-circle text-muted" title="Sedang diproses"></i>
                                             </tal:block>
                                         </div>
                                     </tal:block>
                                 </td>
-
-                                <td class="text-center" style="vertical-align: middle;" tal:content="python:repeat.item.index + 1">1</td>
-
+                                <td class="text-center" style="vertical-align: middle;" tal:content="python:repeat.item.index + 1"></td>
                                 <td style="vertical-align: middle;">
-                                    <strong tal:content="python:getattr(item, 'nama', getattr(item, 'nomor', '-'))">Nama</strong>
-                                    <small class="text-muted" style="display:block; font-size: 10px;">ID: ${item.id}</small>
+                                    <strong tal:content="python:getattr(item, 'nama', getattr(item, 'description', '-'))"></strong>
+                                    <small class="text-muted" style="display:block; font-size: 10px;">ID: ${getattr(item, 'id', '0')}</small>
                                 </td>
-
-                                <td class="text-center" style="vertical-align: middle;" tal:content="python:getattr(item, 'value', '-')">Nilai</td>
-
+                                <td class="text-center" style="vertical-align: middle;" 
+                                    tal:content="python:getattr(item, 'kode', getattr(item, 'value', '-'))"></td>
                                 <td class="text-center" style="vertical-align: middle;">
                                     <tal:block tal:define="st python:int(getattr(item, 'status', 0))">
                                         <span tal:condition="python:st == 3" class="label label-success">SELESAI</span>
@@ -111,9 +120,8 @@
                                     </tal:block>
                                 </td>
                             </tr>
-
                             <tr tal:condition="not items">
-                                <td colspan="5" class="text-center" style="padding: 20px;">Tidak ada data permohonan.</td>
+                                <td colspan="5" class="text-center">Data tidak ditemukan.</td>
                             </tr>
                         </tbody>
                     </table>
