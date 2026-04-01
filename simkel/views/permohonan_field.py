@@ -15,22 +15,40 @@ class FieldSchema(colander.Schema):
     
     nama = colander.SchemaNode(
         colander.String(), 
-        title="Nama Field")
+        title="Label di Form Warga")
     
     kode = colander.SchemaNode(
+        colander.String(), 
+        title="ID HTML (Tanpa Spasi)")
+    
+    tipe = colander.SchemaNode(
         colander.String(),
-        title="Kode",
-        missing=None) 
-        
+        title="Tipe Input",
+        widget=widget.SelectWidget(values=[
+            ('text', 'Teks'),
+            ('number', 'Angka'),
+            ('date', 'Tanggal'),
+            ('file', 'Upload Berkas'),
+            ('textarea', 'Alamat/Paragraf')
+        ]),
+        default='text')
+    
+    is_required = colander.SchemaNode(
+        colander.Boolean(),
+        title="Wajib Diisi?",
+        widget=widget.CheckboxWidget(),
+        missing=False)
+    
     value = colander.SchemaNode(
         colander.String(), 
-        title="Nilai")
+        title="Nilai Default / Opsi",
+        missing=None)
 
 class Views(BaseView):
     def __init__(self, request):
         super().__init__(request)
         self.request = request
-        self.session = SimkelDBSession
+        self.session = SimkelDBSession()
         self.title = "Permohonan Field"
 
     def get_row(self, row_id):
@@ -94,6 +112,8 @@ class Views(BaseView):
                 item.jpel_id = appstruct['jpel_id']
                 item.nama = appstruct['nama']
                 item.kode = appstruct['kode']
+                item.tipe = appstruct['tipe']
+                item.is_required = appstruct['is_required']
                 item.value = appstruct['value']
                 item.updated = datetime.now()
                 if 'kirim' in request.POST:
@@ -119,6 +139,8 @@ class Views(BaseView):
                 'jpel_id': item.jpel_id, 
                 'nama': item.nama, 
                 'kode': item.kode,
+                'tipe': getattr(item, 'tipe', 'text'),
+                'is_required': getattr(item, 'is_required', False),
                 'value': item.value
             }
         return dict(title=f"Form {self.title}", form=form.render(appstruct), row=item)
