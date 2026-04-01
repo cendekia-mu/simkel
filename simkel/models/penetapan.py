@@ -23,5 +23,15 @@ class SimkelPenetapan(SimkelBase):
     jabatan = Column(String(64))
     jabatan_2 = Column(String(64))
 
+    @property
+    def tgl_cetak_str(self):
+        if self.tgl_ttd:
+            return self.tgl_ttd.strftime('%d-%m-%Y')
+        return "-"
+
+    @property
+    def info_wilayah(self):
+        return f"Kel. {self.kelurahan}, Kec. {self.kecamatan}"
+
     def __repr__(self):
         return f"<SimkelPenetapan(id={self.id}, kode='{self.kode}')>"

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, ForeignKey
-from . import SimkelBase,SimkelDBSession
+from . import SimkelBase, SimkelDBSession
 
 class SimkelGroupLayanan(SimkelBase):
     __tablename__ = 'simkel_group_layanan'
@@ -9,6 +9,10 @@ class SimkelGroupLayanan(SimkelBase):
     id = Column(Integer, primary_key=True)
     group_id = Column(Integer, ForeignKey('groups.id'), nullable=False)
     jpel_id = Column(Integer, ForeignKey('simkel_jpel.id'), nullable=False)
+
+    @property
+    def is_active_assignment(self):
+        return self.group_id is not None and self.jpel_id is not None
 
     def __repr__(self):
         return f"<SimkelGroupLayanan(id={self.id}, group_id={self.group_id}, jpel_id={self.jpel_id})>"

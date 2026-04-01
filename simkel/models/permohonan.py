@@ -1,3 +1,4 @@
+import json
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text
 from . import SimkelBase, SimkelDBSession
 
@@ -14,5 +15,15 @@ class SimkelPermohonan(SimkelBase):
     additional = Column(Text)   
     reason = Column(String(128))
 
-    def __repr__(self):
-        return f"<SimkelPermohonan(id={self.id}, status={self.status})>"
+    @property
+    def additional_data(self):
+        if self.additional:
+            try:
+                return json.loads(self.additional)
+            except:
+                return {}
+        return {}
+
+    @additional_data.setter
+    def additional_data(self, value):
+        self.additional = json.dumps(value)
