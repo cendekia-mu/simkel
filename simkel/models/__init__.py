@@ -15,14 +15,9 @@ register(SimkelDBSession)
 class SimkelUser(models.User, SimkelBase):
     db_session = SimkelDBSession
 
-class StandarModel(models.StandarModel):
+class PartnerModel(models.Partner, SimkelBase):
     db_session = SimkelDBSession
 
-class NamaModel(models.NamaModel):
-    db_session = SimkelDBSession
-
-class KodeModel(models.KodeModel):
-    db_session = SimkelDBSession
 
 class ProvinsiModel(models.ResProvinsi, SimkelBase):
     db_session = SimkelDBSession
@@ -34,9 +29,6 @@ class KecamatanModel(models.ResKecamatan, SimkelBase):
     db_session = SimkelDBSession
 
 class KelurahanModel(models.ResDesa, SimkelBase):
-    db_session = SimkelDBSession
-
-class PartnerModel(models.Partner, SimkelBase):
     db_session = SimkelDBSession
 
 from .jenispermohonan import SimkelJenisPermohonan

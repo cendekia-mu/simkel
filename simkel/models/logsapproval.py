@@ -1,31 +1,16 @@
 from sqlalchemy import Column, Integer, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from . import SimkelBase, StandarModel, SimkelDBSession
+from . import SimkelBase,SimkelDBSession
 
-class SimkelLogApproval(StandarModel, SimkelBase):
+class SimkelLogApproval(SimkelBase):
     __tablename__ = 'simkel_log_approval'
     __table_args__ = {'extend_existing': True}
     db_session = SimkelDBSession 
     
     id = Column(Integer, primary_key=True)
-    create_uid = Column(Integer)
-    created = Column(
-        DateTime,
-        server_default=func.now(),
-        nullable=False
-    )
-    id_permohonan = Column(
-        Integer,
-        ForeignKey('simkel_permohonan.id'),
-        nullable=False
-    )
-    status = Column(Integer)
-    
-    permohonan = relationship(
-        'SimkelPermohonan', 
-        backref='logs'
-    )
+    create_uid = Column(Integer) 
+    created = Column(DateTime)    
+    id_permohonan = Column(Integer, nullable=False) 
+    status = Column(Integer)  
 
     def __repr__(self):
         return f"<SimkelLogApproval(id={self.id}, id_permohonan={self.id_permohonan}, status={self.status})>"
