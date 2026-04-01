@@ -1,134 +1,129 @@
+import logging
 import transaction
-from datetime import datetime, time
+import colander
+from datetime import datetime
+from sqlalchemy import desc, or_
 from pyramid.httpexceptions import HTTPFound
-from sqlalchemy import desc, asc, or_, cast, Date
-from ..models import SimkelDBSession, SimkelPermohonanField, SimkelLogApproval
-from opensipkd.base.views import BaseView
+from deform import widget, Form, ValidationFailure
 
-class ApprovalView(BaseView):
+from opensipkd.base.views import BaseView 
+from ..models import SimkelDBSession
+from ..models.permohonan import SimkelPermohonan
+from ..models.jenispermohonan import SimkelJenisPermohonan
+
+log = logging.getLogger(__name__)
+
+class ApprovalSchema(colander.Schema):
+    nama = colander.SchemaNode(
+        colander.String(), 
+        title="Nama Pemohon", 
+        missing=None,
+        widget=widget.TextInputWidget(readonly=True))
+    
+    nomor_permohonan = colander.SchemaNode(
+        colander.String(), 
+        title="Nomor Permohonan", 
+        missing=None,
+        widget=widget.TextInputWidget(readonly=True))
+    
+    catatan = colander.SchemaNode(
+        colander.String(), 
+        title="Catatan Verifikasi/Revisi",
+        missing=None,
+        widget=widget.TextAreaWidget(rows=3))
+
+class Views(BaseView):
     def __init__(self, request):
         super().__init__(request)
         self.request = request
-        self.session = SimkelDBSession
+        self.session = SimkelDBSession()
         self.title = "Verifikasi & Approval"
+        self.list_route = 'simkel-approval'
+        self.route = 'simkel-approval'
+        self.table = SimkelPermohonan 
+        self.list_schema = ApprovalSchema 
+        self.edit_schema = ApprovalSchema
+        self.allow_add = False
+        self.allow_edit = True
+        self.allow_delete = False
 
-    def get_row(self, row_id):
-        return self.session.query(SimkelPermohonanField).filter_by(id=row_id).first()
+    def query_id(self):
+        row_id = self.request.matchdict.get('id')
+        return self.session.query(SimkelPermohonan).filter_by(id=row_id)
+
+    def get_values(self, row):
+        return {c.name: getattr(row, c.name) for c in row.__table__.columns}
+
+    def get_item_table(self, parent):
+        return None
 
     def view_list(self):
+        user = self.request.user
         params = self.request.params
-        search = params.get('search')
-        status_filter = params.get('status')
-        sort_option = params.get('sort')
-        limit = int(params.get('limit', 25))
+        query = self.session.query(SimkelPermohonan).filter(SimkelPermohonan.status == 1)
         
-        query = self.session.query(SimkelPermohonanField)
-
-        if status_filter and status_filter.strip() != "":
-            query = query.filter(SimkelPermohonanField.status == int(status_filter))
-        else:
-            query = query.filter(SimkelPermohonanField.status.in_([1, 3]))
-
+        if hasattr(user, 'kelurahan_id') and user.kelurahan_id:
+            query = query.filter(SimkelPermohonan.kelurahan_id == user.kelurahan_id)
+        
+        jpel_id = params.get('jpel_id')
+        if jpel_id and jpel_id.isdigit():
+            query = query.filter(SimkelPermohonan.jpel_id == int(jpel_id))
+            
+        search = params.get('term') or params.get('search')
         if search:
-            query = query.filter(
-                or_(
-                    SimkelPermohonanField.nama.ilike(f'%{search}%'),
-                    SimkelPermohonanField.kode.ilike(f'%{search}%')
-                )
-            )
-
-        if sort_option == 'id_asc':
-            query = query.order_by(asc(SimkelPermohonanField.created))
-        elif sort_option == 'nama_asc':
-            query = query.order_by(asc(SimkelPermohonanField.nama))
-        elif sort_option == 'nama_desc':
-            query = query.order_by(desc(SimkelPermohonanField.nama))
-        else:
-            query = query.order_by(desc(SimkelPermohonanField.created))
-
-        rows = query.limit(limit).all()
+            query = query.filter(or_(
+                SimkelPermohonan.nama.ilike(f'%{search}%'),
+                SimkelPermohonan.nomor_permohonan.ilike(f'%{search}%')
+            ))
+            
+        rows = query.order_by(desc(SimkelPermohonan.id)).all()
+        jpel_list = [(p.id, p.nama) for p in self.session.query(SimkelJenisPermohonan).all()]
         
         return dict(
-            title=f"Daftar {self.title}", 
+            title=self.title,
             rows=rows,
+            jpel_list=jpel_list,
             params=params
         )
-    
+
     def view_view(self):
-        item = self.get_row(self.request.matchdict.get('id'))
-        if not item:
-            self.request.session.flash("Data tidak ditemukan.", 'error')
-            return HTTPFound(location=self.request.route_url('simkel-approval'))
-        
-        return dict(
-            title="Review Detail Permohonan",
-            row=item,
-            form='', 
-            readonly=True
-        )
-    
-    def view_approve(self):
-        request = self.request
-        item = self.get_row(request.matchdict.get('id'))
+        row = self.query_id().first()
+        res = super().view_view()
+        if isinstance(res, dict):
+            res['title'] = self.title
+            res['row'] = row
+        return res
 
-        if item and item.status == 1:
-            try:
-                item.status = 3 
-                item.updated = datetime.now()
-                self.session.add(item)
-
-                log = SimkelLogApproval()
-                log.id_permohonan = item.id
-                log.status = 3
-                log.create_uid = request.user.id if hasattr(request, 'user') and request.user else None
-                self.session.add(log)
-                
-                self.session.flush()
-                transaction.commit()
-                
-                request.session.flash(f"ID {item.id}: Permohonan Berhasil DISETUJUI.")
-            except Exception as e:
-                transaction.abort()
-                request.session.flash(f"Gagal Approve: {str(e)}", 'error')
-        
-        return HTTPFound(location=request.route_url('simkel-approval'))
-
-    def view_reject(self):
-        request = self.request
-        item = self.get_row(request.matchdict.get('id'))
-
-        if item and item.status == 1:
-            try:
-                item.status = 2
-                item.updated = datetime.now()
-                self.session.add(item)
-
-                log = SimkelLogApproval()
-                log.id_permohonan = item.id
-                log.status = 2
-                log.create_uid = request.user.id if hasattr(request, 'user') and request.user else None
-                self.session.add(log)
-                
-                self.session.flush()
-                transaction.commit()
-                
-                request.session.flash(f"ID {item.id}: Permohonan DITOLAK.")
-            except Exception as e:
-                transaction.abort()
-                request.session.flash(f"Gagal Reject: {str(e)}", 'error')
+    def next_view(self, form=None, row=None):
+        if not self.request.POST:
+            return None
             
-        return HTTPFound(location=request.route_url('simkel-approval'))
+        btn_approve = 'approve' in self.request.POST
+        btn_reject = 'reject' in self.request.POST
+        catatan = self.request.params.get('catatan', '')
 
-    def view_print(self):
-        request = self.request
-        item = self.get_row(request.matchdict.get('id'))
-        
-        if not item:
-            request.session.flash("Data tidak ditemukan.", 'error')
-            return HTTPFound(location=request.route_url('simkel-approval'))
+        try:
+            if btn_approve:
+                is_tahap_akhir = False 
+                if is_tahap_akhir:
+                    row.status = 3
+                    self.request.session.flash("Berkas disetujui dan TTE berhasil.")
+                else:
+                    row.status = 1 
+                    self.request.session.flash("Verifikasi berhasil, diteruskan ke tahap selanjutnya.")
             
-        if item.status not in [1, 3]:
-            request.session.flash("Cetak hanya tersedia untuk permohonan aktif.", 'warning')
-            return HTTPFound(location=request.route_url('simkel-approval'))
+            elif btn_reject:
+                if not catatan:
+                    self.request.session.flash("Catatan wajib diisi untuk penolakan.", 'error')
+                    return None
+                row.status = 4 
+                self.request.session.flash("Berkas telah ditolak.")
 
-        return dict(title="Cetak Arsip Approval", row=item)
+            self.session.flush()
+            transaction.commit()
+            return HTTPFound(location=self.request.route_url(self.list_route))
+            
+        except Exception as e:
+            transaction.abort()
+            self.request.session.flash(f"Error: {str(e)}", 'error')
+            return None

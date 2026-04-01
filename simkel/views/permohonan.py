@@ -1,12 +1,22 @@
+import json
+import logging
 import colander
 import transaction
-import json
-from datetime import datetime
-from deform import widget, Form, ValidationFailure
-from pyramid.httpexceptions import HTTPFound
+from datetime import datetime, date
 from sqlalchemy import desc, or_
-from ..models import SimkelDBSession, SimkelJenisPermohonan, SimkelPermohonan, SimkelPermohonanField
+from pyramid.httpexceptions import HTTPFound
+from deform import widget, Form, ValidationFailure
+
 from opensipkd.base.views import BaseView 
+from ..models import (
+    SimkelDBSession, 
+    SimkelPermohonan, 
+    SimkelJenisPermohonan, 
+    SimkelLogApproval,
+    SimkelPermohonanField
+)
+
+log = logging.getLogger(__name__)
 
 class FieldSchema(colander.Schema):
     jenis_id = colander.SchemaNode(
@@ -32,210 +42,191 @@ class Views(BaseView):
         self.request = request
         self.session = SimkelDBSession()
         self.title = "Permohonan"
+        self.route = 'simkel-permohonan'
+        self.list_route = 'simkel-permohonan'
+        
+        self.table = SimkelPermohonan
+        self.list_schema = FieldSchema
+        self.edit_schema = FieldSchema
+        
+        self.allow_print = False 
 
-    def get_row(self, row_id):
-        return self.session.query(SimkelPermohonan).filter_by(id=row_id).first()
+    def query_id(self):
+        row_id = self.request.matchdict.get('id')
+        return self.session.query(SimkelPermohonan).filter_by(id=row_id)
+
+    def get_values(self, row):
+        return {c.name: getattr(row, c.name) for c in row.__table__.columns}
+
+    def get_item_table(self, parent):
+        return None
 
     def view_list(self):
-        jenis_id = self.request.params.get('jenis_id')
-        search = self.request.params.get('term') or self.request.params.get('search')
-        user_id = self.request.user.id 
-        query = self.session.query(SimkelPermohonan).filter(
-            SimkelPermohonan.partner_id == user_id
-        )
-        if jenis_id and jenis_id.isdigit():
-            query = query.filter(SimkelPermohonan.jpel_id == int(jenis_id))
-
-        if search:
-            query = query.filter(
-                or_(
-                    SimkelPermohonan.kode.ilike(f'%{search}%'),
-                    SimkelPermohonan.keterangan.ilike(f'%{search}%')
-                )
-            )
-        rows = query.order_by(desc(SimkelPermohonan.id)).all()
+        user = self.request.user
+        params = self.request.params
+        query = self.session.query(SimkelPermohonan)
         
-        p_query = self.session.query(SimkelJenisPermohonan).all()
-        jpel_list = [(p.id, p.nama) for p in p_query]
+        if hasattr(user, 'partner_id') and user.partner_id:
+            query = query.filter(SimkelPermohonan.partner_id == user.partner_id)
+
+        jenis_id = params.get('jenis_id')
+        if jenis_id and jenis_id.isdigit():
+            query = query.filter(SimkelPermohonan.jenis_id == int(jenis_id))
+
+        search = params.get('term') or params.get('search')
+        if search:
+            query = query.filter(or_(
+                SimkelPermohonan.keterangan.ilike(f'%{search}%'),
+                SimkelPermohonan.nomor_permohonan.ilike(f'%{search}%')
+            ))
+
+        rows = query.order_by(desc(SimkelPermohonan.id)).all()
+        jpel_list = [(p.id, p.nama) for p in self.session.query(SimkelJenisPermohonan).all()]
+
         return dict(
             title=f"Daftar {self.title}",
             rows=rows,
             jpel_list=jpel_list,
-            params=self.request.params
+            params=params
         )
 
+    def view_view(self):
+        row = self.query_id().first()
+        if not row:
+            return HTTPFound(location=self.request.route_url(self.route))
+            
+        fields = self.session.query(SimkelPermohonanField).filter_by(
+            jpel_id=row.jenis_id
+        ).order_by(SimkelPermohonanField.id).all()
+        
+        res = super().view_view()
+        if isinstance(res, dict):
+            res.update(dict(
+                title=f"Detail {self.title}",
+                row=row,
+                fields=fields,
+                data=row.additional_data or {}
+            ))
+        return res
+
     def view_add(self):
+        return self.view_form()
+
+    def view_edit(self):
+        return self.view_form()
+
+    def view_form(self):
         request = self.request
-        jenis_id = request.params.get('jenis_id')
-        schema = FieldSchema().bind()
+        row_id = request.matchdict.get('id')
+        item = self.query_id().first() if row_id else SimkelPermohonan()
+        jenis_id = request.params.get('jenis_id') or (item.jenis_id if row_id else None)
+        
+        if row_id and item.status not in [0, 2]:
+            request.session.flash("Data sudah dikunci.", 'warning')
+            return HTTPFound(location=request.route_url(self.route))
+
+        schema = FieldSchema()
         
         if jenis_id:
             fields = self.session.query(SimkelPermohonanField).filter_by(
-                jpel_id=jenis_id, status=3
+                jpel_id=int(jenis_id)
             ).order_by(SimkelPermohonanField.id).all()
             
             for f in fields:
-
-                if f.tipe == 'number':
-                    node_type = colander.Integer()
-                elif f.tipe == 'date':
-                    node_type = colander.Date()
-                else:
-                    node_type = colander.String()
+                node_type = colander.String()
+                if f.tipe == 'number': node_type = colander.Integer()
+                elif f.tipe == 'date': node_type = colander.Date()
 
                 schema.add(colander.SchemaNode(
                     node_type,
-                    name=f.kode,
-                    title=f.nama,
-                    missing=None if f.is_required else colander.drop,
+                    name=str(f.kode),
+                    title=str(f.nama),
+                    missing=colander.drop if not f.is_required else None,
                     widget=widget.TextAreaWidget() if f.tipe == 'textarea' else widget.TextInputWidget()
                 ))
+
+        schema = schema.bind()
         form = Form(schema, buttons=('simpan', 'kirim', 'batal'))
-        p_query = self.session.query(SimkelJenisPermohonan).all()
+        p_query = self.session.query(SimkelJenisPermohonan.id, SimkelJenisPermohonan.nama).all()
         schema['jenis_id'].widget.values = [(p.id, p.nama) for p in p_query]
 
-        return dict(
-            title=f"Tambah {self.title}",
-            form=form.render(),
-            jenis_id=jenis_id,
-            row = None
-        )
-    
-    def view_edit(self):
-        request = self.request
-        row_id = request.matchdict.get('id')
-        item = self.get_row(row_id)
-
-        if not item or item.partner_id != request.user.id:
-            request.session.flash("Data tidak ditemukan atau bukan milik Anda.", 'error')
-            return HTTPFound(location=request.route_url('simkel-permohonan'))
-        
-        if item.status not in [0, 2]:
-            request.session.flash("Data sudah dikunci, tidak bisa diubah.", 'warning')
-            return HTTPFound(location=request.route_url('simkel-permohonan'))
-        
-        schema = FieldSchema().bind()
-
-        fields = self.session.query(SimkelPermohonanField).filter_by(
-            jpel_id=item.jpel_id, status=3
-        ).order_by(SimkelPermohonanField.id).all()
-
-        for f in fields:
-            if f.tipe == 'number':
-                node_type = colander.Integer()
-            elif f.tipe == 'date':
-                node_type = colander.Date()
-            else:
-                node_type = colander.String()
-
-            schema.add(colander.SchemaNode(
-                node_type,
-                name=f.kode,
-                title=f.nama,
-                missing=None if f.is_required else colander.drop,
-                widget=widget.TextAreaWidget() if f.tipe == 'textarea' else widget.TextInputWidget()
-            ))
-
-        appstruct = {
-            'jenis_id': item.jpel_id,
-            'tgl_permohonan': item.tgl_permohonan,
-            'keterangan': item.keterangan,
-        }
-
-        if item.additional_data:
-            try:
-                data_tambahan = json.loads(item.additional_data)
-                appstruct.update(data_tambahan)
-            except:
-                pass
-
-        form = Form(schema, buttons=('simpan', 'batal'))
-        
-        p_query = self.session.query(SimkelJenisPermohonan).all()
-        schema['jenis_id'].widget.values = [(p.id, p.nama) for p in p_query]
-
-        return dict(
-            title=f"Edit {self.title}",
-            form=form.render(appstruct), 
-            row=item
-        )
-    
-    def view_act(self):
-        request = self.request
-        row_id = request.matchdict.get('id')
-        item = self.get_row(row_id) if row_id else SimkelPermohonan()
-
-        if row_id and item.status not in [0, 2]:
-            request.session.flash("Data sudah dikunci, tidak bisa diubah.", 'error')
-            return HTTPFound(location=request.route_url('simkel-permohonan'))
-        
         if request.POST:
             if 'batal' in request.POST:
-                return HTTPFound(location=request.route_url('simkel-permohonan'))
+                return HTTPFound(location=request.route_url(self.route))
             
+            controls = request.POST.items()
             try:
-                item.jpel_id = request.POST.get('jenis_id')
-                item.keterangan = request.POST.get('keterangan')
+                appstruct = form.validate(controls)
+                return self.view_act(item, appstruct)
+            except ValidationFailure as e:
+                return dict(title=f"Form {self.title}", form=e.render(), row=item)
 
-                if not row_id:
-                    item.partner_id = request.user.id
-                    item.tgl_permohonan = datetime.now()
-                
-                item.updated = datetime.now()
+        appstruct = {}
+        if row_id:
+            appstruct = {
+                'jenis_id': item.jenis_id,
+                'tgl_permohonan': item.tgl_permohonan.date() if item.tgl_permohonan else None,
+                'keterangan': item.keterangan,
+            }
+            if item.additional_data:
+                appstruct.update(item.additional_data)
 
-                main_fields = ['jenis_id', 'tgl_permohonan', 'keterangan', 'csrf_token', 'id']
-                additional_data = {}
+        return dict(title=f"Form {self.title}", form=form.render(appstruct), row=item)
 
-                for key in request.POST:
-                    if key not in main_fields and not key.startswith('__'):
-                        additional_data[key] = request.POST.get(key)
-                
-                item.additional_data = json.dumps(additional_data)
+    def view_act(self, item, appstruct):
+        request = self.request
+        try:
+            item.jenis_id = appstruct['jenis_id']
+            item.keterangan = appstruct['keterangan']
 
-                if 'kirim' in request.POST:
-                    item.status = 1 
-                    msg = "Permohonan berhasil dikirim ke petugas."
-                else:
-                    item.status = 0
-                    msg = "Permohonan berhasil disimpan sebagai Draft."
-
+            if not item.id:
+                item.partner_id = getattr(request.user, 'partner_id', 1) or 1
+                item.tgl_permohonan = datetime.now()
+            
+            exclude = ['jenis_id', 'tgl_permohonan', 'keterangan']
+            additional_data = {}
+            for k, v in appstruct.items():
+                if k not in exclude:
+                    if isinstance(v, (datetime, date)):
+                        additional_data[k] = v.strftime('%Y-%m-%d')
+                    else:
+                        additional_data[k] = v
+            item.additional_data = additional_data
+            
+            if 'kirim' in request.POST:
+                item.status = 1
                 self.session.add(item)
                 self.session.flush()
-                transaction.commit()
-                
-                request.session.flash(msg)
-                return HTTPFound(location=request.route_url('simkel-permohonan'))
 
-            except Exception as e:
-                transaction.abort()
-                request.session.flash(f"Gagal Simpan: {str(e)}", 'error')
-                return HTTPFound(location=request.environ.get('HTTP_REFERER', '/'))
-                
-                request.session.flash(msg)
-                return HTTPFound(location=request.route_url('simkel-permohonan'))
-            
-    def view_delete(self):
-        request = self.request
-        row_id = request.matchdict.get('id')
-        item = self.get_row(row_id)
-        
-        if not item or item.owner_id != request.user.id:
-            request.session.flash("Data tidak ditemukan.", 'error')
-            return HTTPFound(location=request.route_url('simkel-permohonan'))
-        
-        if item.status != 0:
-            request.session.flash("Data yang sudah diproses tidak bisa dihapus.", 'warning')
-            return HTTPFound(location=request.route_url('simkel-permohonan'))
-        
-        try:
-            self.session.delete(item)
-            self.session.flush()
+                log_entry = SimkelLogApproval()
+                log_entry.id_permohonan = item.id
+                log_entry.status = 1
+                log_entry.keterangan = "Permohonan dikirim oleh warga"
+                log_entry.created = datetime.now()
+                self.session.add(log_entry)
+            else:
+                item.status = 0
+                self.session.add(item)
+
             transaction.commit()
-            request.session.flash("Data berhasil dihapus.")
+            request.session.flash("Data berhasil disimpan.")
+            return HTTPFound(location=request.route_url(self.route))
+
         except Exception as e:
             transaction.abort()
-            request.session.flash(f"Gagal Hapus: {str(e)}", 'error')
+            request.session.flash(f"Gagal: {str(e)}", 'error')
+            return HTTPFound(location=request.environ.get('HTTP_REFERER', '/'))
 
-        return HTTPFound(location=request.route_url('simkel-permohonan'))
-    
-    
+    def view_delete(self):
+        row = self.query_id().first()
+        if row and row.status == 0:
+            try:
+                self.session.delete(row)
+                transaction.commit()
+                request.session.flash("Data berhasil dihapus.")
+            except Exception as e:
+                transaction.abort()
+                request.session.flash(f"Gagal: {str(e)}", 'error')
+        else:
+            request.session.flash("Data tidak bisa dihapus.", 'warning')
+        return HTTPFound(location=self.request.route_url(self.route))
