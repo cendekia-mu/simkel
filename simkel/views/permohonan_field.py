@@ -1,8 +1,9 @@
+import re
+import json
 import logging
-import transaction
 import colander
+import transaction
 from sqlalchemy import desc, or_
-from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound
 from deform import widget, Form, ValidationFailure
 
@@ -13,61 +14,66 @@ from ..models.jenispermohonan import SimkelJenisPermohonan
 
 log = logging.getLogger(__name__)
 
+# --- PENGAMAN 1: Validasi agar Kode tidak pakai spasi ---
+def validate_kode(node, value):
+    if not re.match(r"^[a-zA-Z0-9_]+$", value):
+        raise colander.Invalid(node, "Kode hanya boleh huruf, angka, dan underscore (_). Tidak boleh ada spasi!")
+
 class FieldSchema(colander.Schema):
     jpel_id = colander.SchemaNode(
         colander.Integer(), 
-        title="Jenis Pelayanan",
+        title="Pilih Jenis Layanan",
         widget=widget.SelectWidget())
     
     nama = colander.SchemaNode(
         colander.String(), 
-        title="Label di Form Warga")
+        title="Pertanyaan di Form Warga (Label)",
+        description="Contoh: Nama Ibu Kandung, Luas Tanah, dll")
 
     kode = colander.SchemaNode(
         colander.String(),
-        title="ID/Kode Field (Tanpa Spasi)",
-        missing=None)
+        title="Kode Field / Variabel Database",
+        description="Contoh: nama_ibu, luas_tanah (Tanpa spasi)",
+        validator=validate_kode)
 
     tipe = colander.SchemaNode(
         colander.String(),
-        title="Tipe Input",
+        title="Tipe Isian",
         widget=widget.SelectWidget(values=[
-            ('text', 'Teks Singkat'),
-            ('number', 'Angka'),
-            ('date', 'Tanggal'),
-            ('file', 'Upload Berkas'),
-            ('textarea', 'Alamat/Paragraf')
+            ('text', 'Teks Singkat (Satu Baris)'),
+            ('number', 'Angka / Nominal'),
+            ('date', 'Pilih Tanggal'),
+            ('textarea', 'Paragraf (Alamat/Keterangan Panjang)')
         ]),
         default='text')
 
     is_required = colander.SchemaNode(
         colander.Boolean(),
-        title="Wajib Diisi?",
+        title="Wajib Diisi oleh Warga?",
         widget=widget.CheckboxWidget(),
         missing=False)
 
     is_printed = colander.SchemaNode(
         colander.Boolean(),
-        title="Tampilkan di PDF/TTE?",
+        title="Cetak di PDF Surat?",
         widget=widget.CheckboxWidget(),
         missing=True)
     
     value = colander.SchemaNode(
         colander.String(), 
-        title="Opsi Tambahan (JSON)",
+        title="Opsi Tambahan (Biar dikosongkan jika tidak paham)",
         missing=None,
-        widget=widget.TextAreaWidget(rows=3))
+        widget=widget.TextAreaWidget(rows=2))
 
 class Views(BaseView):
     def __init__(self, request):
         super().__init__(request)
         self.request = request
         self.session = SimkelDBSession()
-        self.title = "Master Field Permohonan"
+        self.title = "Master Desain Form Layanan" # Nama disesuaikan fungsinya
         self.route = 'simkel-permohonan-field'
         self.list_route = 'simkel-permohonan-field'
         
-        # Penyesuaian BaseView
         self.table = SimkelPermohonanField
         self.list_schema = FieldSchema
         self.edit_schema = FieldSchema
@@ -95,18 +101,24 @@ class Views(BaseView):
             query = query.filter(
                 or_(
                     SimkelPermohonanField.nama.ilike(f'%{search}%'),
-                    SimkelPermohonanField.value.ilike(f'%{search}%')
+                    SimkelPermohonanField.kode.ilike(f'%{search}%')
                 )
             )
             
         rows = query.order_by(desc(SimkelPermohonanField.id)).all()
+        
+        # Mapping nama layanan agar gampang dibaca di template UI
         p_query = self.session.query(SimkelJenisPermohonan).all()
-        jpel_list = [(p.id, p.nama) for p in p_query]
+        jpel_dict = {p.id: p.nama for p in p_query}
+        
+        # Tambahkan atribut virtual untuk dibaca template
+        for r in rows:
+            r.nama_layanan = jpel_dict.get(r.jpel_id, 'Tidak Diketahui')
         
         return dict(
             title=f"Daftar {self.title}", 
             rows=rows,
-            jpel_list=jpel_list, 
+            jpel_list=[(p.id, p.nama) for p in p_query], 
             params=self.request.params
         )
 
@@ -116,7 +128,6 @@ class Views(BaseView):
             self.request.session.flash("Data tidak ditemukan.", 'error')
             return HTTPFound(location=self.request.route_url(self.route))
             
-        # FIX: Tambahkan atribut status dummy karena template base5.pt mengekspektasikannya
         if not hasattr(row, 'status'):
             row.status = None
 
@@ -138,7 +149,7 @@ class Views(BaseView):
         item = self.query_id().first() if row_id else SimkelPermohonanField()
         
         p_query = self.session.query(SimkelJenisPermohonan).all()
-        choices = [(p.id, f"{p.id} - {p.nama}") for p in p_query]
+        choices = [(p.id, p.nama) for p in p_query]
         
         schema = FieldSchema().bind()
         schema['jpel_id'].widget.values = choices
@@ -153,7 +164,6 @@ class Views(BaseView):
         appstruct = {}
         if row_id and item:
             appstruct = self.get_values(item)
-            # Pastikan row tersedia untuk template base.pt
             if not hasattr(item, 'status'):
                 item.status = None
             
@@ -169,6 +179,18 @@ class Views(BaseView):
         try:
             appstruct = form.validate(controls)
             
+            # --- PENGAMAN 2: Cek Duplikat Kode ---
+            cek_duplikat = self.session.query(SimkelPermohonanField).filter(
+                SimkelPermohonanField.jpel_id == appstruct['jpel_id'],
+                SimkelPermohonanField.kode == appstruct['kode'],
+                SimkelPermohonanField.id != item.id # Abaikan ID sendiri jika sedang edit
+            ).first()
+            
+            if cek_duplikat:
+                request.session.flash(f"Gagal! Kode '{appstruct['kode']}' sudah dipakai di layanan ini.", 'error')
+                return dict(title=f"Form {self.title}", form=form.render(appstruct), row=item)
+            # -------------------------------------
+
             for field in appstruct:
                 setattr(item, field, appstruct[field])
             
@@ -188,7 +210,6 @@ class Views(BaseView):
 
     def view_delete(self):
         request = self.request
-        row_id = request.matchdict.get('id')
         item = self.query_id().first()
         
         if not item:
