@@ -3,7 +3,7 @@ import logging
 import colander
 import transaction
 from datetime import datetime, date
-from sqlalchemy import desc, or_, insert
+from sqlalchemy import desc, insert
 from pyramid.httpexceptions import HTTPFound
 from deform import widget, Form, ValidationFailure
 
@@ -54,7 +54,11 @@ class Views(BaseView):
 
     def query_id(self):
         row_id = self.request.matchdict.get('id')
-        return self.session.query(SimkelPermohonan).filter_by(id=row_id)
+        q = self.session.query(SimkelPermohonan).filter_by(id=row_id)
+        pid = getattr(self.request.user, 'partner_id', None)
+        if pid:
+            q = q.filter_by(partner_id=pid)
+        return q
 
     def get_values(self, row):
         return {c.name: getattr(row, c.name) for c in row.__table__.columns}
@@ -76,12 +80,9 @@ class Views(BaseView):
 
         search = params.get('term') or params.get('search')
         if search:
-            query = query.filter(
-                SimkelPermohonan.reason.ilike(f'%{search}%')
-            )
+            query = query.filter(SimkelPermohonan.reason.ilike(f'%{search}%'))
 
         rows = query.order_by(desc(SimkelPermohonan.id)).all()
-
         jpel_query = self.session.query(SimkelJenisPermohonan).all()
         jpel_dict = {p.id: p.nama for p in jpel_query}
 
@@ -89,12 +90,10 @@ class Views(BaseView):
             r.nama = jpel_dict.get(r.jenis_id, '-')
             r.deskripsi = r.reason if r.reason else '-'
 
-        jpel_list = [(p.id, p.nama) for p in jpel_query]
-
         return dict(
             title=f"Daftar {self.title}",
             rows=rows,
-            jpel_list=jpel_list,
+            jpel_list=[(p.id, p.nama) for p in jpel_query],
             params=params
         )
 
@@ -107,7 +106,6 @@ class Views(BaseView):
             jpel_id=row.jenis_id
         ).order_by(SimkelPermohonanField.id).all()
 
-        # Ambil data additional (JSON) dari kolom 'additional'
         additional = {}
         if row.additional:
             try:
@@ -117,71 +115,29 @@ class Views(BaseView):
 
         jpel = self.session.query(SimkelJenisPermohonan).filter_by(id=row.jenis_id).first()
 
-        # Status label sesuai status_text di model
         status_map = {
-            0:  ('<span class="label label-default">Draft</span>'),
-            1:  ('<span class="label label-warning">Menunggu Verifikasi</span>'),
-            2:  ('<span class="label label-danger">Perbaikan / Dikembalikan</span>'),
-            3:  ('<span class="label label-info">Disetujui Petugas / Proses SK</span>'),
-            4:  ('<span class="label label-success">Selesai / SK Terbit</span>'),
-            -1: ('<span class="label label-danger">Ditolak</span>'),
+            0:  ('default', 'Draft'),
+            1:  ('warning', 'Menunggu Verifikasi'),
+            2:  ('danger',  'Perbaikan / Dikembalikan'),
+            3:  ('info',    'Disetujui Petugas / Proses SK'),
+            4:  ('success', 'Selesai / SK Terbit'),
+            -1: ('danger',  'Ditolak'),
         }
-        status_html = status_map.get(row.status, f'<span class="label label-default">{row.status}</span>')
-
-        nama_jenis = jpel.nama if jpel else '-'
+        status_class, status_label = status_map.get(row.status, ('default', str(row.status)))
         tgl = row.tgl_permohonan
         tgl_str = tgl.strftime('%d/%m/%Y') if tgl else '-'
-
-        # Bangun HTML detail
-        html = f'''
-        <div class="form-horizontal">
-            <div class="form-group">
-                <label class="col-md-3 control-label">Jenis Pelayanan</label>
-                <div class="col-md-9"><p class="form-control-static">{nama_jenis}</p></div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-3 control-label">Tanggal Permohonan</label>
-                <div class="col-md-9"><p class="form-control-static">{tgl_str}</p></div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-3 control-label">Status</label>
-                <div class="col-md-9"><p class="form-control-static">{status_html}</p></div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-3 control-label">Keterangan</label>
-                <div class="col-md-9"><p class="form-control-static">{row.reason or '-'}</p></div>
-            </div>
-        '''
-
-        # Tampilkan alasan penolakan kalau ditolak
-        if row.status == -1 and row.reason:
-            html += f'''
-            <div class="form-group">
-                <label class="col-md-3 control-label text-danger">Alasan Penolakan</label>
-                <div class="col-md-9">
-                    <p class="form-control-static text-danger"><strong>{row.reason}</strong></p>
-                </div>
-            </div>
-            '''
-
-        # Tampilkan field dinamis dari additional
-        if additional and fields:
-            html += '<hr><h4>Data Tambahan</h4>'
-            for f in fields:
-                val = additional.get(f.nama, '-')
-                html += f'''
-                <div class="form-group">
-                    <label class="col-md-3 control-label">{f.nama}</label>
-                    <div class="col-md-9"><p class="form-control-static">{val}</p></div>
-                </div>
-                '''
-
-        html += '</div>'
 
         return dict(
             title=f"Detail {self.title}",
             row=row,
-            form=html
+            nama_jenis=jpel.nama if jpel else '-',
+            tgl_str=tgl_str,
+            status_class=status_class,
+            status_label=status_label,
+            additional_display=[
+                {'label': f.nama, 'value': additional.get(f.nama, '-')}
+                for f in fields
+            ],
         )
 
     def view_add(self):
@@ -195,7 +151,6 @@ class Views(BaseView):
         row_id = request.matchdict.get('id')
         item = self.query_id().first() if row_id else SimkelPermohonan()
 
-        # Cek apakah data boleh diedit (hanya status 0=Draft atau 2=Perbaikan)
         if row_id and item and item.status not in [0, 2]:
             request.session.flash("Data sudah dikunci atau sedang diproses.", 'warning')
             return HTTPFound(location=request.route_url(self.route))
@@ -203,13 +158,10 @@ class Views(BaseView):
         jenis_id = request.params.get('jenis_id') or (item.jenis_id if row_id and item else None)
 
         schema = FieldSchema()
-
-        # Tambahkan field dinamis sesuai jenis pelayanan
         if jenis_id:
             fields = self.session.query(SimkelPermohonanField).filter_by(
                 jpel_id=int(jenis_id)
             ).order_by(SimkelPermohonanField.id).all()
-
             for f in fields:
                 schema.add(colander.SchemaNode(
                     colander.String(),
@@ -222,22 +174,17 @@ class Views(BaseView):
 
         schema = schema.bind()
         form = Form(schema, buttons=('simpan', 'kirim', 'batal'))
-
-        # Isi pilihan jenis pelayanan
-        p_query = self.session.query(SimkelJenisPermohonan).all()
-        schema['jenis_id'].widget.values = [(p.id, p.nama) for p in p_query]
+        schema['jenis_id'].widget.values = [(p.id, p.nama) for p in self.session.query(SimkelJenisPermohonan).all()]
 
         if request.POST:
             if 'batal' in request.POST:
                 return HTTPFound(location=request.route_url(self.route))
-            controls = request.POST.items()
             try:
-                appstruct = form.validate(controls)
+                appstruct = form.validate(request.POST.items())
                 return self.view_act(item, appstruct)
             except ValidationFailure as e:
                 return dict(title=f"Form {self.title}", form=e.render(), row=item)
 
-        # Isi appstruct untuk form edit
         appstruct = {}
         if row_id and item:
             tgl = item.tgl_permohonan
@@ -246,7 +193,6 @@ class Views(BaseView):
                 'tgl_permohonan': tgl.date() if hasattr(tgl, 'date') else tgl,
                 'keterangan': item.reason or '',
             }
-            # Tambahkan data additional ke appstruct
             if item.additional:
                 try:
                     add_data = json.loads(item.additional) if isinstance(item.additional, str) else item.additional
@@ -270,7 +216,6 @@ class Views(BaseView):
             if not item.id:
                 item.partner_id = getattr(request.user, 'partner_id', None) or 1
 
-            # Simpan field dinamis ke kolom 'additional' (JSON)
             exclude = {'jenis_id', 'tgl_permohonan', 'keterangan'}
             additional_data = {}
             for k, v in appstruct.items():
@@ -291,20 +236,18 @@ class Views(BaseView):
 
             self.session.add(item)
             self.session.flush()
-
             self.session.execute(insert(SimkelLogApproval).values(
                 id_permohonan=item.id,
                 status=item.status
             ))
-
             transaction.commit()
             request.session.flash(pesan)
             return HTTPFound(location=request.route_url(self.route))
 
         except Exception as e:
             transaction.abort()
-            log.error(f"Permohonan error: {str(e)}")
-            request.session.flash(f"Gagal: {str(e)}", 'error')
+            log.error("Permohonan error: %s", e, exc_info=True)
+            request.session.flash(f"Error: {str(e)}", 'error')  # sementara untuk debug
             return HTTPFound(location=request.route_url(self.route))
 
     def view_delete(self):
@@ -322,8 +265,8 @@ class Views(BaseView):
                 request.session.flash("Data berhasil dihapus.")
             except Exception as e:
                 transaction.abort()
-                log.error(f"Delete error: {str(e)}")
-                request.session.flash(f"Gagal menghapus: {str(e)}", 'error')
+                log.error("Delete error: %s", e, exc_info=True)
+                request.session.flash("Gagal menghapus data.", 'error')
         else:
             request.session.flash("Data tidak bisa dihapus karena sudah diproses.", 'warning')
 

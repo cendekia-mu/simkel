@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 import transaction
 import colander
@@ -11,17 +12,14 @@ from opensipkd.base.views import BaseView
 from ..models import SimkelDBSession
 from ..models.permohonan import SimkelPermohonan
 from ..models.jenispermohonan import SimkelJenisPermohonan
+from ..models.permohonan_field import SimkelPermohonanField
 from ..models import SimkelLogApproval
 
 log = logging.getLogger(__name__)
 
-# Status permohonan (sesuai SimkelLogApproval.status_text):
-# 0  = Draft
-# 1  = Dikirim / Menunggu Verifikasi Petugas
-# 2  = Perbaikan / Dikembalikan
-# 3  = Disetujui Petugas / Proses SK (menunggu pejabat)
-# 4  = Selesai / SK Terbit
-# -1 = Dibatalkan / Ditolak
+
+def is_admin(group_names):
+    return 'admin' in group_names or 'Superuser' in group_names
 
 
 class ApprovalSchema(colander.Schema):
@@ -55,7 +53,7 @@ class Views(BaseView):
         user = self.request.user
         group_names = [g.group_name for g in user.groups] if user else []
 
-        if 'admin' in group_names:
+        if is_admin(group_names):
             self.allow_add = True
             self.allow_edit = True
             self.allow_delete = True
@@ -68,23 +66,44 @@ class Views(BaseView):
         row_id = self.request.matchdict.get('id')
         return self.session.query(SimkelPermohonan).filter_by(id=row_id)
 
+    def get_list_jenis(self):
+        return self.session.query(SimkelJenisPermohonan).all()
+
+    def _get_additional(self, row):
+        """Ambil data additional yang diisi warga."""
+        if not row.additional:
+            return {}
+        try:
+            return json.loads(row.additional) if isinstance(row.additional, str) else row.additional
+        except Exception:
+            return {}
+
+    def _get_fields(self, jenis_id):
+        """Ambil field dinamis sesuai jenis permohonan."""
+        if not jenis_id:
+            return []
+        return self.session.query(SimkelPermohonanField).filter_by(
+            jpel_id=jenis_id
+        ).order_by(SimkelPermohonanField.id).all()
+
     def view_list(self):
         res = super().view_list()
         user = self.request.user
         group_names = [g.group_name for g in user.groups]
         query = self.session.query(SimkelPermohonan)
 
-        if 'admin' in group_names:
+        if is_admin(group_names):
             pass
         elif 'pejabat' in group_names:
             query = query.filter(SimkelPermohonan.status == 3)
         elif 'petugas' in group_names:
             query = query.filter(SimkelPermohonan.status == 1)
         else:
-            return HTTPFound(location=self.request.route_url('home'))
+            return HTTPFound(location=self.request.route_url('simkel-home'))
 
         rows = query.order_by(desc(SimkelPermohonan.id)).all()
-        jpel_dict = {p.id: p.nama for p in self.session.query(SimkelJenisPermohonan).all()}
+        list_jenis = self.get_list_jenis()
+        jpel_dict = {p.id: p.nama for p in list_jenis}
 
         for r in rows:
             r.nama = jpel_dict.get(r.jenis_id, '-')
@@ -102,20 +121,26 @@ class Views(BaseView):
         if not row:
             return HTTPFound(location=self.request.route_url(self.list_route))
 
+        list_jenis = self.get_list_jenis()
         user = self.request.user
-        group_names = [g.group_name for g in user.groups] if user else []
 
-        if 'petugas' in group_names and row.status == 1:
-            buttons = ('approve', 'reject', 'batal')
-        elif 'pejabat' in group_names and row.status == 3:
-            buttons = ('approve', 'reject', 'batal')
-        elif 'admin' in group_names:
+        if not user:
+            return HTTPFound(location=self.request.route_url('simkel-home'))
+
+        group_names = [g.group_name for g in user.groups]
+
+        if ('petugas' in group_names and row.status == 1) or \
+           ('pejabat' in group_names and row.status == 3) or \
+           is_admin(group_names):
             buttons = ('approve', 'reject', 'batal')
         else:
             buttons = ('batal',)
 
         schema = ApprovalSchema()
         form = Form(schema, buttons=buttons)
+
+        additional_fields = self._get_fields(row.jenis_id)
+        additional_data   = self._get_additional(row)
 
         if self.request.POST:
             if 'batal' in self.request.POST:
@@ -125,51 +150,78 @@ class Views(BaseView):
                 appstruct = form.validate(controls)
                 return self.view_act(row, appstruct)
             except ValidationFailure as e:
-                return dict(form=e.render(), row=row, title=self.title)
+                return dict(
+                    form=e.render(),
+                    row=row,
+                    title=self.title,
+                    list_jenis=list_jenis,
+                    additional_fields=additional_fields,
+                    additional_data=additional_data,
+                )
 
         jpel = self.session.query(SimkelJenisPermohonan).filter_by(id=row.jenis_id).first()
         appstruct = {
-            'nama': str(jpel.nama) if jpel else '-',
-            'catatan': str(row.reason) if row.reason else ''
+            'nama'   : str(jpel.nama) if jpel else '-',
+            'catatan': str(row.reason) if row.reason else '',
         }
 
-        return dict(form=form.render(appstruct), row=row, title=self.title)
+        return dict(
+            form=form.render(appstruct),
+            row=row,
+            title=self.title,
+            list_jenis=list_jenis,
+            additional_fields=additional_fields,
+            additional_data=additional_data,
+        )
 
     def returned_form(self, form, **kwargs):
         kwargs.setdefault("title", self.title)
         kwargs.setdefault("row", self.query_id().first())
+        kwargs.setdefault("list_jenis", self.get_list_jenis())
+        kwargs.setdefault("additional_fields", [])
+        kwargs.setdefault("additional_data", {})
         return super().returned_form(form, **kwargs)
 
     def view_act(self, row, appstruct):
         user = self.request.user
         if not user:
             self.request.session.flash("Sesi tidak valid, silakan login kembali.", 'error')
-            return HTTPFound(location=self.request.route_url('home'))
+            return HTTPFound(location=self.request.route_url('simkel-home'))
 
         group_names = [g.group_name for g in user.groups]
-        catatan = appstruct.get('catatan', '')
+        catatan = appstruct.get('catatan', '').strip()
 
         try:
             if 'approve' in self.request.POST:
                 if 'petugas' in group_names:
+                    if row.status != 1:
+                        raise Exception("Status tidak valid untuk diverifikasi petugas.")
                     row.status = 3
                     pesan = "Petugas: Verifikasi disetujui, diteruskan ke pejabat."
+
                 elif 'pejabat' in group_names:
-                    tte_sukses = self.trigger_tte(row)
-                    if not tte_sukses:
+                    if row.status != 3:
+                        raise Exception("Status tidak valid untuk disetujui pejabat.")
+                    if not self.trigger_tte(row):
                         raise Exception("Proses TTE gagal, approval dibatalkan.")
                     row.status = 4
                     pesan = "Pejabat: Approval final & TTE sukses."
-                elif 'admin' in group_names:
+
+                elif is_admin(group_names):
                     if row.status == 1:
                         row.status = 3
                     elif row.status == 3:
                         row.status = 4
-                    pesan = f"Admin: Status diperbarui ke {row.status}"
+                    else:
+                        raise Exception(f"Status {row.status} tidak bisa di-approve.")
+                    pesan = f"Admin: Status diperbarui ke {row.status}."
+
                 else:
-                    raise Exception("Grup user tidak memiliki izin untuk approve.")
+                    raise Exception("Akun Anda tidak memiliki izin untuk melakukan approval.")
 
             elif 'reject' in self.request.POST:
+                if not catatan:
+                    raise Exception("Catatan/alasan penolakan wajib diisi.")
                 row.status = -1
                 row.reason = catatan
                 pesan = f"Ditolak oleh {user.user_name}: {catatan}"
@@ -182,12 +234,12 @@ class Views(BaseView):
 
             self.session.execute(insert(SimkelLogApproval).values(
                 id_permohonan=row.id,
-                status=row.status
+                status=row.status,
             ))
 
             transaction.commit()
             log.info(pesan)
-            self.request.session.flash(pesan)
+            self.request.session.flash(pesan, 'success')
             return HTTPFound(location=self.request.route_url(self.list_route))
 
         except Exception as e:
@@ -197,16 +249,25 @@ class Views(BaseView):
             return HTTPFound(location=self.request.route_url(self.list_route))
 
     def trigger_tte(self, row):
-        # TODO: Implementasi integrasi TTE di sini
-        # Return True jika sukses, False jika gagal
         return True
 
     def view_preview(self):
         row = self.query_id().first()
-        if row and row.file_path:
-            if not row.file_path.lower().endswith('.pdf'):
-                self.request.session.flash("File bukan PDF.", 'error')
-                return HTTPFound(location=self.request.route_url(self.list_route))
-            if os.path.exists(row.file_path):
-                return FileResponse(row.file_path, request=self.request, content_type='application/pdf')
-        return HTTPFound(location=self.request.route_url(self.list_route))
+        if not row:
+            self.request.session.flash("Data tidak ditemukan.", 'error')
+            return HTTPFound(location=self.request.route_url(self.list_route))
+
+        file_path = getattr(row, 'file_path', None)
+        if not file_path:
+            self.request.session.flash("File tidak tersedia.", 'error')
+            return HTTPFound(location=self.request.route_url(self.list_route))
+
+        if not file_path.lower().endswith('.pdf'):
+            self.request.session.flash("File bukan PDF.", 'error')
+            return HTTPFound(location=self.request.route_url(self.list_route))
+
+        if not os.path.exists(file_path):
+            self.request.session.flash("File tidak ditemukan di server.", 'error')
+            return HTTPFound(location=self.request.route_url(self.list_route))
+
+        return FileResponse(file_path, request=self.request, content_type='application/pdf')
