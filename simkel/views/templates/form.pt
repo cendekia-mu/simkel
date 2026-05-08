@@ -93,6 +93,7 @@
         </section>
     </div>
 </div>
+
 <style>
     .panel-body { padding: 25px; }
     .control-label { font-weight: bold; text-align: left !important; color: #333; }
@@ -101,3 +102,24 @@
     .label { padding: .3em .6em; font-size: 80%; }
     .deform fieldset { border: none !important; padding: 0 !important; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cari select jenis_id yang di-render oleh deform
+    // deform biasanya render id field sebagai "jenis_id"
+    var jenisSelect = document.getElementById('jenis_id') 
+                   || document.querySelector('select[name="jenis_id"]');
+    
+    if (!jenisSelect) return;
+
+    jenisSelect.addEventListener('change', function() {
+        var jenisId = this.value;
+        if (!jenisId) return;
+
+        // Reload halaman dengan jenis_id sebagai parameter GET
+        var url = new URL(window.location.href);
+        url.searchParams.set('jenis_id', jenisId);
+        window.location.href = url.toString();
+    });
+});
+</script>
