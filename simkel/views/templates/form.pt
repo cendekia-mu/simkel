@@ -105,18 +105,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Cari select jenis_id yang di-render oleh deform
-    // deform biasanya render id field sebagai "jenis_id"
     var jenisSelect = document.getElementById('jenis_id') 
                    || document.querySelector('select[name="jenis_id"]');
     
     if (!jenisSelect) return;
 
+    var urlParams = new URLSearchParams(window.location.search);
+    var jenisIdFromUrl = urlParams.get('jenis_id');
+    if (jenisIdFromUrl) {
+        jenisSelect.value = jenisIdFromUrl;
+    }
+
     jenisSelect.addEventListener('change', function() {
         var jenisId = this.value;
         if (!jenisId) return;
-
-        // Reload halaman dengan jenis_id sebagai parameter GET
         var url = new URL(window.location.href);
         url.searchParams.set('jenis_id', jenisId);
         window.location.href = url.toString();
