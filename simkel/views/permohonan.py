@@ -127,8 +127,23 @@ class Views(BaseView):
         tgl = row.tgl_permohonan
         tgl_str = tgl.strftime('%d/%m/%Y') if tgl else '-'
 
+        schema = FieldSchema()
+        jpel_list = self.session.query(SimkelJenisPermohonan).all()
+        schema['jenis_id'].widget = widget.SelectWidget(values=[(p.id, p.nama) for p in jpel_list])
+        schema = schema.bind()
+
+        tgl_val = row.tgl_permohonan
+        appstruct = {
+            'jenis_id':       row.jenis_id,
+            'tgl_permohonan': tgl_val.date() if hasattr(tgl_val, 'date') else tgl_val,
+            'keterangan':     row.reason or '',
+        }
+        form = Form(schema, buttons=())
+        form = form.render(appstruct, readonly=True)
+
         return dict(
             title=f"Detail {self.title}",
+            form=form,
             row=row,
             nama_jenis=jpel.nama if jpel else '-',
             tgl_str=tgl_str,
@@ -157,7 +172,12 @@ class Views(BaseView):
 
         jenis_id = request.params.get('jenis_id') or (item.jenis_id if row_id and item else None)
 
+        jpel_list = self.session.query(SimkelJenisPermohonan).all()
+        jpel_values = [(p.id, p.nama) for p in jpel_list]
+
         schema = FieldSchema()
+        schema['jenis_id'].widget = widget.SelectWidget(values=jpel_values)
+
         if jenis_id:
             fields = self.session.query(SimkelPermohonanField).filter_by(
                 jpel_id=int(jenis_id)
@@ -174,7 +194,6 @@ class Views(BaseView):
 
         schema = schema.bind()
         form = Form(schema, buttons=('simpan', 'kirim', 'batal'))
-        schema['jenis_id'].widget.values = [(p.id, p.nama) for p in self.session.query(SimkelJenisPermohonan).all()]
 
         if request.POST:
             if 'batal' in request.POST:
@@ -206,7 +225,7 @@ class Views(BaseView):
         request = self.request
         try:
             if item.id and item.status not in [0, 2]:
-                request.session.flash("Data ini sudah diproses dan tidak dapat diubah.", 'warning')
+                request.session.flash("Data sudah dikunci atau sedang diproses.", 'warning')
                 return HTTPFound(location=request.route_url(self.route))
 
             item.jenis_id = appstruct['jenis_id']
@@ -214,7 +233,11 @@ class Views(BaseView):
             item.reason = appstruct.get('keterangan') or ''
 
             if not item.id:
-                item.partner_id = getattr(request.user, 'partner_id', None) or 1
+                partner_id = getattr(request.user, 'partner_id', None)
+                if not partner_id:
+                    request.session.flash("Akun Anda tidak memiliki partner yang terdaftar.", 'error')
+                    return HTTPFound(location=request.route_url(self.route))
+                item.partner_id = partner_id
 
             exclude = {'jenis_id', 'tgl_permohonan', 'keterangan'}
             additional_data = {}
@@ -247,7 +270,7 @@ class Views(BaseView):
         except Exception as e:
             transaction.abort()
             log.error("Permohonan error: %s", e, exc_info=True)
-            request.session.flash(f"Error: {str(e)}", 'error')  # sementara untuk debug
+            request.session.flash("Terjadi kesalahan sistem, silakan coba lagi.", 'error')
             return HTTPFound(location=request.route_url(self.route))
 
     def view_delete(self):
@@ -260,6 +283,10 @@ class Views(BaseView):
 
         if row.status == 0:
             try:
+                self.session.execute(insert(SimkelLogApproval).values(
+                    id_permohonan=row.id,
+                    status=-99
+                ))
                 self.session.delete(row)
                 transaction.commit()
                 request.session.flash("Data berhasil dihapus.")

@@ -93,6 +93,7 @@
         </section>
     </div>
 </div>
+
 <style>
     .panel-body { padding: 25px; }
     .control-label { font-weight: bold; text-align: left !important; color: #333; }
@@ -101,3 +102,26 @@
     .label { padding: .3em .6em; font-size: 80%; }
     .deform fieldset { border: none !important; padding: 0 !important; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var jenisSelect = document.getElementById('jenis_id') 
+                   || document.querySelector('select[name="jenis_id"]');
+    
+    if (!jenisSelect) return;
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var jenisIdFromUrl = urlParams.get('jenis_id');
+    if (jenisIdFromUrl) {
+        jenisSelect.value = jenisIdFromUrl;
+    }
+
+    jenisSelect.addEventListener('change', function() {
+        var jenisId = this.value;
+        if (!jenisId) return;
+        var url = new URL(window.location.href);
+        url.searchParams.set('jenis_id', jenisId);
+        window.location.href = url.toString();
+    });
+});
+</script>
